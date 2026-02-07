@@ -68,6 +68,7 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -687,6 +688,11 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Tax breakdown table */
+.breakdown-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .breakdown-table {
   width: 100%;
   border-collapse: separate;
@@ -1029,7 +1035,7 @@ input[type="range"]::-moz-range-thumb {
 /* Responsive */
 @media (max-width: 640px) {
   .app-container {
-    padding: 1rem 1rem 3rem;
+    padding: 1rem 0.75rem 3rem;
   }
 
   .header h1 {
@@ -1044,8 +1050,67 @@ input[type="range"]::-moz-range-thumb {
     grid-template-columns: 1fr;
   }
 
+  .stat-card[style*="grid-column"] {
+    grid-column: span 1 !important;
+  }
+
   .card {
     padding: 1.25rem;
+  }
+
+  .breakdown-table {
+    min-width: 0;
+  }
+
+  .breakdown-table th,
+  .breakdown-table td {
+    padding: 0.4rem 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  .breakdown-table .band-name {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .deduction-row {
+    flex-wrap: wrap;
+  }
+
+  .deduction-name {
+    flex: 1 1 100%;
+    margin-bottom: 0.25rem;
+  }
+
+  .deduction-amount-wrapper {
+    width: auto;
+    flex: 1;
+  }
+
+  .bar-label {
+    min-width: 65px;
+    font-size: 0.7rem;
+  }
+
+  .bar-percent {
+    min-width: 38px;
+    font-size: 0.7rem;
+  }
+
+  .region-btn {
+    padding: 0.65rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .disclaimer-content {
+    flex-wrap: wrap;
+  }
+
+  .slider-value {
+    min-width: 60px;
+    font-size: 0.9rem;
   }
 }
 

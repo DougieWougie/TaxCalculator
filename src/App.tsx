@@ -187,13 +187,13 @@ export default function App() {
                   className={`region-btn scottish ${taxRegion === 'scottish' ? 'active' : ''}`}
                   onClick={() => setTaxRegion('scottish')}
                 >
-                  &#127988;&#65039; Scotland
+                  &#127988;&#917607;&#917602;&#917619;&#917603;&#917620;&#917631; Scotland
                 </button>
                 <button
                   className={`region-btn english ${taxRegion === 'english' ? 'active' : ''}`}
                   onClick={() => setTaxRegion('english')}
                 >
-                  &#127988;&#65039;&#8205;&#9760;&#65039; England / Wales / NI
+                  &#127468;&#127463; England / Wales / NI
                 </button>
               </div>
               <div className="rates-info" style={{ marginTop: '1rem' }} aria-live="polite">
@@ -663,6 +663,7 @@ export default function App() {
                       <span className="tax-code-inline">{result.employmentTaxCodeInfo.raw}</span>
                     )}
                   </div>
+                  <div className="breakdown-table-wrapper">
                   <table className="breakdown-table">
                     <thead>
                       <tr>
@@ -687,6 +688,7 @@ export default function App() {
                       </tr>
                     </tbody>
                   </table>
+                  </div>
                 </>
               )}
 
@@ -698,6 +700,7 @@ export default function App() {
                       <span className="tax-code-inline">{result.militaryTaxCodeInfo.raw}</span>
                     )}
                   </div>
+                  <div className="breakdown-table-wrapper">
                   <table className="breakdown-table">
                     <thead>
                       <tr>
@@ -722,10 +725,12 @@ export default function App() {
                       </tr>
                     </tbody>
                   </table>
+                  </div>
                 </>
               )}
 
               {!result.usingTaxCodes && (
+                <div className="breakdown-table-wrapper">
                 <table className="breakdown-table">
                   <thead>
                     <tr>
@@ -750,6 +755,7 @@ export default function App() {
                     </tr>
                   </tbody>
                 </table>
+                </div>
               )}
 
               {result.usingTaxCodes && (
@@ -766,6 +772,7 @@ export default function App() {
                 <span className="card-title-icon">&#128179;</span>
                 National Insurance Breakdown
               </div>
+              <div className="breakdown-table-wrapper">
               <table className="breakdown-table">
                 <thead>
                   <tr>
@@ -790,6 +797,7 @@ export default function App() {
                   </tr>
                 </tbody>
               </table>
+              </div>
               {hasMilitaryPension && (
                 <div className="rates-info">
                   <span>&#127894;</span>
@@ -842,6 +850,7 @@ export default function App() {
                   <span className="card-title-icon">&#128181;</span>
                   Post-Tax Deductions
                 </div>
+                <div className="breakdown-table-wrapper">
                 <table className="breakdown-table">
                   <thead>
                     <tr>
@@ -865,6 +874,7 @@ export default function App() {
                     </tr>
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </div>
