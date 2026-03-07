@@ -304,7 +304,7 @@ function adjustBandsForPersonalAllowance(
     if (band.name === 'Personal Allowance') {
       return { ...band, upperBound: personalAllowance };
     }
-    if (band.threshold < BASE_PERSONAL_ALLOWANCE) {
+    if (band.threshold <= BASE_PERSONAL_ALLOWANCE) {
       return { ...band, threshold: personalAllowance };
     }
     return band;
