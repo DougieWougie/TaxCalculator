@@ -1003,7 +1003,8 @@ function PeriodToggle({
   );
 }
 
-function SliderSpinner({
+// SliderSpinner is used in Tasks 7-8 (slider + numeric spinner compound)
+export function SliderSpinner({
   value,
   onChange,
   min,
