@@ -262,7 +262,7 @@ export default function App() {
                     onChange={(e) => {
                       const raw = sanitizeNumber(e.target.value);
                       setSalarySacrifice(
-                        salarySacrificeIsMonthly ? (raw * 12).toFixed(0) : e.target.value
+                        salarySacrificeIsMonthly ? (raw * 12).toFixed(2) : e.target.value
                       );
                     }}
                     placeholder={salarySacrificeIsMonthly ? 'e.g. 200' : 'e.g. 2400'}
@@ -299,7 +299,7 @@ export default function App() {
                     }
                     onChange={(e) => {
                       const raw = sanitizeNumber(e.target.value);
-                      const annual = pensionContributionIsMonthly ? (raw * 12).toFixed(0) : e.target.value;
+                      const annual = pensionContributionIsMonthly ? (raw * 12).toFixed(2) : e.target.value;
                       setPensionContribution(annual);
                       setPensionPct(0); // detach slider when typing
                     }}
@@ -542,12 +542,12 @@ export default function App() {
                       }
                       onChange={(e) => {
                         const raw = sanitizeNumber(e.target.value);
-                        const annual = deduction.isMonthly ? (raw * 12).toFixed(0) : e.target.value;
+                        const annual = deduction.isMonthly ? (raw * 12).toFixed(2) : e.target.value;
                         setPostTaxDeductions((prev) =>
                           prev.map((d) => d.id === deduction.id ? { ...d, amount: annual } : d)
                         );
                       }}
-                      placeholder={deduction.isMonthly ? '200' : '2400'}
+                      placeholder={deduction.isMonthly ? 'e.g. 200' : 'e.g. 2400'}
                       autoComplete="off"
                     />
                   </div>
