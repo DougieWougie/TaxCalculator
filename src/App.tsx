@@ -998,21 +998,24 @@ function PeriodToggle({
 // SliderSpinner is used in Tasks 7-8 (slider + numeric spinner compound)
 export function SliderSpinner({
   value,
-  onChange,
   min,
   max,
   step,
+  onChange,
   ariaLabel,
 }: {
   value: number;
-  onChange: (value: number) => void;
   min: number;
   max: number;
   step: number;
+  onChange: (v: number) => void;
   ariaLabel: string;
 }) {
+  const decrement = () => onChange(Math.max(min, parseFloat((value - step).toFixed(1))));
+  const increment = () => onChange(Math.min(max, parseFloat((value + step).toFixed(1))));
+
   return (
-    <div className="slider-spinner">
+    <div className="spinner-row">
       <input
         type="range"
         min={min}
@@ -1022,19 +1025,39 @@ export function SliderSpinner({
         onChange={(e) => onChange(parseFloat(e.target.value))}
         aria-label={ariaLabel}
       />
-      <input
-        className="spinner-input"
-        type="number"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => {
-          const v = parseFloat(e.target.value);
-          if (!Number.isNaN(v)) onChange(Math.min(max, Math.max(min, v)));
-        }}
-        aria-label={`${ariaLabel} value`}
-      />
+      <div className="spinner-compound">
+        <button
+          type="button"
+          className="spinner-btn"
+          onClick={decrement}
+          disabled={value <= min}
+          aria-label="Decrease"
+        >
+          &minus;
+        </button>
+        <input
+          type="number"
+          className="spinner-input"
+          min={min}
+          max={max}
+          step={step}
+          value={value.toFixed(1)}
+          onChange={(e) => {
+            const v = parseFloat(e.target.value);
+            if (!isNaN(v)) onChange(Math.max(min, Math.min(max, v)));
+          }}
+          aria-label={`${ariaLabel} value`}
+        />
+        <button
+          type="button"
+          className="spinner-btn"
+          onClick={increment}
+          disabled={value >= max}
+          aria-label="Increase"
+        >
+          &#43;
+        </button>
+      </div>
     </div>
   );
 }
