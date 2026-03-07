@@ -1011,8 +1011,8 @@ export function SliderSpinner({
   onChange: (v: number) => void;
   ariaLabel: string;
 }) {
-  const decrement = () => onChange(Math.max(min, parseFloat((value - step).toFixed(1))));
-  const increment = () => onChange(Math.min(max, parseFloat((value + step).toFixed(1))));
+  const decrement = () => onChange(Math.max(min, Math.round((value - step) * 10) / 10));
+  const increment = () => onChange(Math.min(max, Math.round((value + step) * 10) / 10));
 
   return (
     <div className="spinner-row">
@@ -1045,6 +1045,11 @@ export function SliderSpinner({
           onChange={(e) => {
             const v = parseFloat(e.target.value);
             if (!isNaN(v)) onChange(Math.max(min, Math.min(max, v)));
+          }}
+          onBlur={(e) => {
+            if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+              onChange(min);
+            }
           }}
           aria-label={`${ariaLabel} value`}
         />
