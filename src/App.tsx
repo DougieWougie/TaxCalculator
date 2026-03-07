@@ -45,12 +45,19 @@ export default function App() {
 
   const [annualSalary, setAnnualSalary] = useState('45000');
   const [salarySacrifice, setSalarySacrifice] = useState('0');
+  const [salarySacrificeIsMonthly, setSalarySacrificeIsMonthly] = useState(false);
   const [pensionContribution, setPensionContribution] = useState('0');
+  const [pensionContributionIsMonthly, setPensionContributionIsMonthly] = useState(false);
   const [employerPension, setEmployerPension] = useState('0');
   const [militaryPension, setMilitaryPension] = useState('0');
   const [hasMilitaryPension, setHasMilitaryPension] = useState(false);
   const [taxRegion, setTaxRegion] = useState<TaxRegion>('scottish');
-  const [postTaxDeductions, setPostTaxDeductions] = useState<{ id: number; name: string; amount: string }[]>([]);
+  const [postTaxDeductions, setPostTaxDeductions] = useState<{
+    id: number;
+    name: string;
+    amount: string;
+    isMonthly: boolean;
+  }[]>([]);
   const [nextDeductionId, setNextDeductionId] = useState(1);
   const [employmentTaxCode, setEmploymentTaxCode] = useState('');
   const [militaryPensionTaxCode, setMilitaryPensionTaxCode] = useState('');
@@ -231,9 +238,15 @@ export default function App() {
               </div>
 
               <div className="input-group">
-                <label className="input-label" htmlFor="sacrifice">
-                  Pre-Tax Salary Sacrifice (excl. pension)
-                </label>
+                <div className="input-label-row">
+                  <label className="input-label" htmlFor="sacrifice">
+                    Pre-Tax Salary Sacrifice (excl. pension)
+                  </label>
+                  <PeriodToggle
+                    isMonthly={salarySacrificeIsMonthly}
+                    onChange={setSalarySacrificeIsMonthly}
+                  />
+                </div>
                 <div className="input-wrapper">
                   <span className="input-prefix">&pound;</span>
                   <input
@@ -241,21 +254,37 @@ export default function App() {
                     className="input-field"
                     type="text"
                     inputMode="decimal"
-                    value={salarySacrifice}
-                    onChange={(e) => setSalarySacrifice(e.target.value)}
-                    placeholder="0"
+                    value={
+                      salarySacrificeIsMonthly
+                        ? (sanitizeNumber(salarySacrifice) / 12).toFixed(2)
+                        : salarySacrifice
+                    }
+                    onChange={(e) => {
+                      const raw = sanitizeNumber(e.target.value);
+                      setSalarySacrifice(
+                        salarySacrificeIsMonthly ? (raw * 12).toFixed(0) : e.target.value
+                      );
+                    }}
+                    placeholder={salarySacrificeIsMonthly ? 'e.g. 200' : 'e.g. 2400'}
                     autoComplete="off"
                   />
                 </div>
                 <p className="input-hint">
-                  E.g. cycle-to-work, childcare vouchers, other salary sacrifice benefits
+                  E.g. cycle-to-work, childcare vouchers — enter{' '}
+                  {salarySacrificeIsMonthly ? 'monthly' : 'annual'} amount
                 </p>
               </div>
 
               <div className="input-group">
-                <label className="input-label" htmlFor="pension">
-                  Pension Contribution (salary sacrifice)
-                </label>
+                <div className="input-label-row">
+                  <label className="input-label" htmlFor="pension">
+                    Pension Contribution (salary sacrifice)
+                  </label>
+                  <PeriodToggle
+                    isMonthly={pensionContributionIsMonthly}
+                    onChange={setPensionContributionIsMonthly}
+                  />
+                </div>
                 <div className="input-wrapper">
                   <span className="input-prefix">&pound;</span>
                   <input
@@ -263,12 +292,18 @@ export default function App() {
                     className="input-field"
                     type="text"
                     inputMode="decimal"
-                    value={pensionContribution}
+                    value={
+                      pensionContributionIsMonthly
+                        ? (sanitizeNumber(pensionContribution) / 12).toFixed(2)
+                        : pensionContribution
+                    }
                     onChange={(e) => {
-                      setPensionContribution(e.target.value);
-                      setPensionPct(0); // detach slider
+                      const raw = sanitizeNumber(e.target.value);
+                      const annual = pensionContributionIsMonthly ? (raw * 12).toFixed(0) : e.target.value;
+                      setPensionContribution(annual);
+                      setPensionPct(0); // detach slider when typing
                     }}
-                    placeholder="0"
+                    placeholder={pensionContributionIsMonthly ? 'e.g. 683' : 'e.g. 8200'}
                     autoComplete="off"
                   />
                 </div>
@@ -285,7 +320,8 @@ export default function App() {
                   <span className="slider-value">{pensionPct.toFixed(1)}%</span>
                 </div>
                 <p className="input-hint">
-                  Drag the slider to set pension as a % of gross salary
+                  Drag the slider to set as % of gross salary, or enter{' '}
+                  {pensionContributionIsMonthly ? 'monthly' : 'annual'} amount above
                 </p>
               </div>
 
@@ -476,7 +512,7 @@ export default function App() {
                 Post-Tax Deductions
               </div>
               <p className="input-hint" style={{ marginBottom: '0.75rem' }}>
-                Deducted from your net pay after tax and NI. E.g. Share Save (SAYE), Give As You Earn, union dues, professional subscriptions.
+                Deducted from net pay after tax and NI. Enter annual or monthly — use the toggle per row. E.g. Share Save (SAYE), Give As You Earn, union dues.
               </p>
 
               {postTaxDeductions.map((deduction) => (
@@ -487,9 +523,7 @@ export default function App() {
                     value={deduction.name}
                     onChange={(e) =>
                       setPostTaxDeductions((prev) =>
-                        prev.map((d) =>
-                          d.id === deduction.id ? { ...d, name: e.target.value } : d
-                        )
+                        prev.map((d) => d.id === deduction.id ? { ...d, name: e.target.value } : d)
                       )
                     }
                     placeholder="Name"
@@ -501,24 +535,34 @@ export default function App() {
                       className="input-field deduction-amount"
                       type="text"
                       inputMode="decimal"
-                      value={deduction.amount}
-                      onChange={(e) =>
-                        setPostTaxDeductions((prev) =>
-                          prev.map((d) =>
-                            d.id === deduction.id ? { ...d, amount: e.target.value } : d
-                          )
-                        )
+                      value={
+                        deduction.isMonthly
+                          ? (sanitizeNumber(deduction.amount) / 12).toFixed(2)
+                          : deduction.amount
                       }
-                      placeholder="0"
+                      onChange={(e) => {
+                        const raw = sanitizeNumber(e.target.value);
+                        const annual = deduction.isMonthly ? (raw * 12).toFixed(0) : e.target.value;
+                        setPostTaxDeductions((prev) =>
+                          prev.map((d) => d.id === deduction.id ? { ...d, amount: annual } : d)
+                        );
+                      }}
+                      placeholder={deduction.isMonthly ? '200' : '2400'}
                       autoComplete="off"
                     />
                   </div>
+                  <PeriodToggle
+                    isMonthly={deduction.isMonthly}
+                    onChange={(isMonthly) =>
+                      setPostTaxDeductions((prev) =>
+                        prev.map((d) => d.id === deduction.id ? { ...d, isMonthly } : d)
+                      )
+                    }
+                  />
                   <button
                     className="deduction-remove"
                     onClick={() =>
-                      setPostTaxDeductions((prev) =>
-                        prev.filter((d) => d.id !== deduction.id)
-                      )
+                      setPostTaxDeductions((prev) => prev.filter((d) => d.id !== deduction.id))
                     }
                     aria-label={`Remove ${deduction.name || 'deduction'}`}
                     title="Remove"
@@ -536,7 +580,7 @@ export default function App() {
                 onClick={() => {
                   setPostTaxDeductions((prev) => [
                     ...prev,
-                    { id: nextDeductionId, name: '', amount: '0' },
+                    { id: nextDeductionId, name: '', amount: '0', isMonthly: false },
                   ]);
                   setNextDeductionId((id) => id + 1);
                 }}
@@ -926,6 +970,78 @@ function BarRow({
         />
       </div>
       <span className="bar-percent">{pct.toFixed(1)}%</span>
+    </div>
+  );
+}
+
+function PeriodToggle({
+  isMonthly,
+  onChange,
+}: {
+  isMonthly: boolean;
+  onChange: (isMonthly: boolean) => void;
+}) {
+  return (
+    <div className="period-toggle" role="group" aria-label="Input period">
+      <button
+        type="button"
+        className={`period-toggle-btn ${!isMonthly ? 'active' : ''}`}
+        onClick={() => onChange(false)}
+        aria-pressed={!isMonthly}
+      >
+        Annual
+      </button>
+      <button
+        type="button"
+        className={`period-toggle-btn ${isMonthly ? 'active' : ''}`}
+        onClick={() => onChange(true)}
+        aria-pressed={isMonthly}
+      >
+        Monthly
+      </button>
+    </div>
+  );
+}
+
+function SliderSpinner({
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  ariaLabel,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  ariaLabel: string;
+}) {
+  return (
+    <div className="slider-spinner">
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        aria-label={ariaLabel}
+      />
+      <input
+        className="spinner-input"
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => {
+          const v = parseFloat(e.target.value);
+          if (!Number.isNaN(v)) onChange(Math.min(max, Math.max(min, v)));
+        }}
+        aria-label={`${ariaLabel} value`}
+      />
     </div>
   );
 }
