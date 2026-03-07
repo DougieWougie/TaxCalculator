@@ -871,7 +871,9 @@ export default function App() {
                   <div>
                     Your contribution of {formatCurrency(sanitizeNumber(pensionContribution))}/year is via salary sacrifice (pre-tax), saving you{' '}
                     {formatCurrency(
-                      sanitizeNumber(pensionContribution) * (result.effectiveTaxRate > 0 ? result.marginalTaxRate : 0)
+                      sanitizeNumber(pensionContribution) * (result.effectiveTaxRate > 0
+                        ? result.marginalTaxRate + (result.taxableEmploymentIncome >= 50_270 ? 0.02 : result.taxableEmploymentIncome > 12_570 ? 0.08 : 0)
+                        : 0)
                     )}{' '}
                     in tax and NI. Employer contributions are paid on top of your salary.
                   </div>
