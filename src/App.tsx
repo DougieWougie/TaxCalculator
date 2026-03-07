@@ -341,18 +341,14 @@ export default function App() {
                     autoComplete="off"
                   />
                 </div>
-                <div className="slider-row" style={{ marginTop: '0.75rem' }}>
-                  <input
-                    type="range"
-                    min="0"
-                    max="30"
-                    step="0.5"
-                    value={employerPensionPct}
-                    onChange={(e) => handleEmployerPensionPctChange(parseFloat(e.target.value))}
-                    aria-label="Employer pension contribution percentage"
-                  />
-                  <span className="slider-value">{employerPensionPct.toFixed(1)}%</span>
-                </div>
+                <SliderSpinner
+                  value={employerPensionPct}
+                  min={0}
+                  max={30}
+                  step={0.5}
+                  onChange={handleEmployerPensionPctChange}
+                  ariaLabel="Employer pension contribution percentage"
+                />
                 <p className="input-hint">
                   Paid by your employer on top of your salary &mdash; does not reduce your take-home pay
                 </p>
