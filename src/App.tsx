@@ -307,18 +307,14 @@ export default function App() {
                     autoComplete="off"
                   />
                 </div>
-                <div className="slider-row" style={{ marginTop: '0.75rem' }}>
-                  <input
-                    type="range"
-                    min="0"
-                    max="40"
-                    step="0.5"
-                    value={pensionPct}
-                    onChange={(e) => handlePensionPctChange(parseFloat(e.target.value))}
-                    aria-label="Pension contribution percentage"
-                  />
-                  <span className="slider-value">{pensionPct.toFixed(1)}%</span>
-                </div>
+                <SliderSpinner
+                  value={pensionPct}
+                  min={0}
+                  max={40}
+                  step={0.5}
+                  onChange={handlePensionPctChange}
+                  ariaLabel="Pension contribution percentage"
+                />
                 <p className="input-hint">
                   Drag the slider to set as % of gross salary, or enter{' '}
                   {pensionContributionIsMonthly ? 'monthly' : 'annual'} amount above
