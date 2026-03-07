@@ -12,7 +12,7 @@ export type TaxRegion = 'scottish' | 'english';
 
 export interface TaxBand {
   name: string;
-  lowerBound: number;
+  threshold: number;    // exclusive lower bound — last pound of the PREVIOUS band (or 0)
   upperBound: number;
   rate: number;
 }
@@ -263,28 +263,28 @@ const PA_TAPER_THRESHOLD = 100_000;
 
 // Scottish Income Tax Bands 2025-26
 const SCOTTISH_TAX_BANDS: TaxBand[] = [
-  { name: 'Personal Allowance', lowerBound: 0, upperBound: 12_570, rate: 0 },
-  { name: 'Starter Rate', lowerBound: 12_571, upperBound: 15_397, rate: 0.19 },
-  { name: 'Basic Rate', lowerBound: 15_398, upperBound: 27_491, rate: 0.20 },
-  { name: 'Intermediate Rate', lowerBound: 27_492, upperBound: 43_662, rate: 0.21 },
-  { name: 'Higher Rate', lowerBound: 43_663, upperBound: 75_000, rate: 0.42 },
-  { name: 'Advanced Rate', lowerBound: 75_001, upperBound: 125_140, rate: 0.45 },
-  { name: 'Top Rate', lowerBound: 125_141, upperBound: Infinity, rate: 0.48 },
+  { name: 'Personal Allowance', threshold: 0,       upperBound: 12_570,   rate: 0    },
+  { name: 'Starter Rate',       threshold: 12_570,  upperBound: 15_397,   rate: 0.19 },
+  { name: 'Basic Rate',         threshold: 15_397,  upperBound: 27_491,   rate: 0.20 },
+  { name: 'Intermediate Rate',  threshold: 27_491,  upperBound: 43_662,   rate: 0.21 },
+  { name: 'Higher Rate',        threshold: 43_662,  upperBound: 75_000,   rate: 0.42 },
+  { name: 'Advanced Rate',      threshold: 75_000,  upperBound: 125_140,  rate: 0.45 },
+  { name: 'Top Rate',           threshold: 125_140, upperBound: Infinity, rate: 0.48 },
 ];
 
 // English/Welsh/NI Income Tax Bands 2025-26
 const ENGLISH_TAX_BANDS: TaxBand[] = [
-  { name: 'Personal Allowance', lowerBound: 0, upperBound: 12_570, rate: 0 },
-  { name: 'Basic Rate', lowerBound: 12_571, upperBound: 50_270, rate: 0.20 },
-  { name: 'Higher Rate', lowerBound: 50_271, upperBound: 125_140, rate: 0.40 },
-  { name: 'Additional Rate', lowerBound: 125_141, upperBound: Infinity, rate: 0.45 },
+  { name: 'Personal Allowance', threshold: 0,       upperBound: 12_570,   rate: 0    },
+  { name: 'Basic Rate',         threshold: 12_570,  upperBound: 50_270,   rate: 0.20 },
+  { name: 'Higher Rate',        threshold: 50_270,  upperBound: 125_140,  rate: 0.40 },
+  { name: 'Additional Rate',    threshold: 125_140, upperBound: Infinity, rate: 0.45 },
 ];
 
 // Employee National Insurance Bands 2025-26 (Class 1)
-const NI_BANDS: { name: string; lowerBound: number; upperBound: number; rate: number }[] = [
-  { name: 'Below Primary Threshold', lowerBound: 0, upperBound: 12_570, rate: 0 },
-  { name: 'Main Rate', lowerBound: 12_570, upperBound: 50_270, rate: 0.08 },
-  { name: 'Upper Rate', lowerBound: 50_270, upperBound: Infinity, rate: 0.02 },
+const NI_BANDS: { name: string; threshold: number; upperBound: number; rate: number }[] = [
+  { name: 'Below Primary Threshold', threshold: 0,      upperBound: 12_570,   rate: 0    },
+  { name: 'Main Rate',               threshold: 12_570, upperBound: 50_270,   rate: 0.08 },
+  { name: 'Upper Rate',              threshold: 50_270, upperBound: Infinity, rate: 0.02  },
 ];
 
 function calculatePersonalAllowance(totalIncome: number): number {
@@ -304,8 +304,8 @@ function adjustBandsForPersonalAllowance(
     if (band.name === 'Personal Allowance') {
       return { ...band, upperBound: personalAllowance };
     }
-    if (band.lowerBound <= BASE_PERSONAL_ALLOWANCE) {
-      return { ...band, lowerBound: personalAllowance + 1 };
+    if (band.threshold < BASE_PERSONAL_ALLOWANCE) {
+      return { ...band, threshold: personalAllowance };
     }
     return band;
   });
@@ -323,8 +323,8 @@ function calculateIncomeTax(
   const breakdown: TaxBreakdownBand[] = [];
 
   for (const band of bands) {
-    if (income <= band.lowerBound) break;
-    const taxableInBand = Math.min(income, band.upperBound) - band.lowerBound;
+    if (income <= band.threshold) break;
+    const taxableInBand = Math.min(income, band.upperBound) - band.threshold;
     if (taxableInBand <= 0) continue;
 
     const tax = taxableInBand * band.rate;
@@ -347,9 +347,9 @@ function calculateNI(
   const breakdown: NIBreakdownBand[] = [];
 
   for (const band of NI_BANDS) {
-    if (employmentIncome <= band.lowerBound) break;
+    if (employmentIncome <= band.threshold) break;
     const earningsInBand =
-      Math.min(employmentIncome, band.upperBound) - band.lowerBound;
+      Math.min(employmentIncome, band.upperBound) - band.threshold;
     if (earningsInBand <= 0) continue;
 
     const contribution = earningsInBand * band.rate;
@@ -372,7 +372,7 @@ function getMarginalTaxRate(totalIncome: number, region: TaxRegion): number {
 
   let marginalRate = 0;
   for (const band of bands) {
-    if (totalIncome >= band.lowerBound && totalIncome <= band.upperBound) {
+    if (totalIncome > band.threshold && totalIncome <= band.upperBound) {
       marginalRate = band.rate;
     }
   }
