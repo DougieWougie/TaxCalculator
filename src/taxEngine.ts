@@ -380,7 +380,7 @@ function getMarginalTaxRate(totalIncome: number, region: TaxRegion): number {
   // PA taper zone (£100k-£125,140): for every £2 earned over £100k, £1 of
   // personal allowance is lost. Earning £1 more means paying the marginal rate
   // on that £1 plus the marginal rate on £0.50 of lost PA = rate * 1.5.
-  if (totalIncome > PA_TAPER_THRESHOLD && totalIncome <= 125_140) {
+  if (totalIncome >= PA_TAPER_THRESHOLD && totalIncome <= 125_140) {
     marginalRate = marginalRate * 1.5;
   }
 
