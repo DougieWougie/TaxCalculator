@@ -628,44 +628,112 @@ export default function App() {
               </div>
             </div>
 
+            {/* Net salary / net military pension sub-tiles */}
+            {hasMilitaryPension && (
+              <div className="stats-grid" style={{ marginTop: '0.75rem' }}>
+                <div className="stat-card">
+                  <div className="stat-label">Net Salary</div>
+                  <div className="stat-value">
+                    {formatCurrency(result.monthlyTakeHome - (result.monthlyMilitaryPension - result.militaryPensionTax / 12))}
+                  </div>
+                  <div className="stat-sub">per month</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Net Military Pension</div>
+                  <div className="stat-value">
+                    {formatCurrency(result.monthlyMilitaryPension - result.militaryPensionTax / 12)}
+                  </div>
+                  <div className="stat-sub">per month</div>
+                </div>
+              </div>
+            )}
+
             {/* Stats grid */}
             <div className="card" style={{ animationDelay: '0.15s' }}>
               <div className="card-title">
                 <span className="card-title-icon">&#128202;</span>
-                Monthly Breakdown
+                Income &amp; Deductions
               </div>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-label">Gross Salary</div>
-                  <div className="stat-value">{formatCurrency(result.grossMonthlySalary)}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Income Tax</div>
-                  <div className="stat-value negative">&minus;{formatCurrency(result.monthlyTax)}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">National Insurance</div>
-                  <div className="stat-value negative">&minus;{formatCurrency(result.monthlyNI)}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Salary Sacrifice</div>
-                  <div className="stat-value negative">&minus;{formatCurrency(result.monthlySalarySacrifice)}</div>
-                </div>
-                {result.totalPostTaxDeductions > 0 && (
-                  <div className="stat-card">
-                    <div className="stat-label">Post-Tax Deductions</div>
-                    <div className="stat-value negative">&minus;{formatCurrency(result.monthlyPostTaxDeductions)}</div>
-                  </div>
-                )}
-                {hasMilitaryPension && (
-                  <div className="stat-card">
-                    <div className="stat-label">Military Pension (net)</div>
-                    <div className="stat-value positive">
-                      +{formatCurrency(result.monthlyMilitaryPension - result.militaryPensionTax / 12)}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <table className="pl-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Monthly</th>
+                    <th>Annual</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Income section */}
+                  <tr className="section-header">
+                    <td colSpan={3}>Income</td>
+                  </tr>
+                  <tr>
+                    <td>Gross Salary</td>
+                    <td>{formatCurrency(result.grossMonthlySalary)}</td>
+                    <td>{formatCurrency(result.grossSalary)}</td>
+                  </tr>
+                  {hasMilitaryPension && (
+                    <tr>
+                      <td>Military Pension</td>
+                      <td>{formatCurrency(result.monthlyMilitaryPension)}</td>
+                      <td>{formatCurrency(result.militaryPension)}</td>
+                    </tr>
+                  )}
+                  <tr className="subtotal-row">
+                    <td>Total Income</td>
+                    <td>{formatCurrency(result.grossMonthlySalary + (hasMilitaryPension ? result.monthlyMilitaryPension : 0))}</td>
+                    <td>{formatCurrency(result.grossSalary + (hasMilitaryPension ? result.militaryPension : 0))}</td>
+                  </tr>
+
+                  {/* Deductions section */}
+                  <tr className="section-header">
+                    <td colSpan={3}>Deductions</td>
+                  </tr>
+                  <tr>
+                    <td>Income Tax</td>
+                    <td className="negative">&minus;{formatCurrency(result.monthlyTax)}</td>
+                    <td className="negative">&minus;{formatCurrency(result.incomeTax)}</td>
+                  </tr>
+                  <tr>
+                    <td>National Insurance</td>
+                    <td className="negative">&minus;{formatCurrency(result.monthlyNI)}</td>
+                    <td className="negative">&minus;{formatCurrency(result.nationalInsurance)}</td>
+                  </tr>
+                  {result.otherSalarySacrifice > 0 && (
+                    <tr>
+                      <td>Pre-Tax Salary Sacrifice</td>
+                      <td className="negative">&minus;{formatCurrency(result.monthlyOtherSalarySacrifice)}</td>
+                      <td className="negative">&minus;{formatCurrency(result.otherSalarySacrifice)}</td>
+                    </tr>
+                  )}
+                  {result.pensionContribution > 0 && (
+                    <tr>
+                      <td>Pension Contribution</td>
+                      <td className="negative">&minus;{formatCurrency(result.monthlyPensionContribution)}</td>
+                      <td className="negative">&minus;{formatCurrency(result.pensionContribution)}</td>
+                    </tr>
+                  )}
+                  {result.totalPostTaxDeductions > 0 && (
+                    <tr>
+                      <td>Post-Tax Deductions</td>
+                      <td className="negative">&minus;{formatCurrency(result.monthlyPostTaxDeductions)}</td>
+                      <td className="negative">&minus;{formatCurrency(result.totalPostTaxDeductions)}</td>
+                    </tr>
+                  )}
+                  <tr className="subtotal-row">
+                    <td>Total Deductions</td>
+                    <td className="negative">&minus;{formatCurrency(result.monthlyTax + result.monthlyNI + result.monthlySalarySacrifice + result.monthlyPostTaxDeductions)}</td>
+                    <td className="negative">&minus;{formatCurrency(result.incomeTax + result.nationalInsurance + result.totalSalarySacrifice + result.totalPostTaxDeductions)}</td>
+                  </tr>
+
+                  {/* Net row */}
+                  <tr className="net-row">
+                    <td>Net Take-Home</td>
+                    <td>{formatCurrency(result.monthlyTakeHome)}</td>
+                    <td>{formatCurrency(result.netAnnualIncome)}</td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* Visual bar chart */}
               <div style={{ marginTop: '1.25rem' }}>
