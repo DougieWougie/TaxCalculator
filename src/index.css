@@ -687,6 +687,83 @@ input[type="range"]::-moz-range-thumb {
   color: var(--success);
 }
 
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* P&L breakdown table */
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.breakdown-table th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: right;
+  padding: 0 0 0.5rem 0;
+}
+
+.breakdown-table th:first-child {
+  text-align: left;
+}
+
+.breakdown-table td {
+  padding: 0.35rem 0;
+  color: var(--text-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.breakdown-table td:first-child {
+  text-align: left;
+  color: var(--text-secondary);
+  padding-right: 1rem;
+}
+
+.breakdown-table .section-header td {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 1rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.breakdown-table .subtotal-row td {
+  font-weight: 700;
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.4rem;
+  padding-bottom: 0.75rem;
+}
+
+.breakdown-table .net-row td {
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-primary);
+  border-top: 2px solid var(--accent);
+  padding-top: 0.6rem;
+}
+
+.breakdown-table .negative {
+  color: var(--danger);
+}
+
+.breakdown-table .positive {
+  color: var(--success);
+}
+
 /* Tax breakdown table */
 .breakdown-table-wrapper {
   overflow-x: auto;
