@@ -46,8 +46,10 @@ export default function App() {
   const [annualSalary, setAnnualSalary] = useState('45000');
   const [salarySacrifice, setSalarySacrifice] = useState('0');
   const [salarySacrificeIsMonthly, setSalarySacrificeIsMonthly] = useState(false);
+  const [salarySacrificeMonthlyInput, setSalarySacrificeMonthlyInput] = useState('0');
   const [pensionContribution, setPensionContribution] = useState('0');
   const [pensionContributionIsMonthly, setPensionContributionIsMonthly] = useState(false);
+  const [pensionContributionMonthlyInput, setPensionContributionMonthlyInput] = useState('0');
   const [employerPension, setEmployerPension] = useState('0');
   const [militaryPension, setMilitaryPension] = useState('0');
   const [hasMilitaryPension, setHasMilitaryPension] = useState(false);
@@ -57,6 +59,7 @@ export default function App() {
     name: string;
     amount: string;
     isMonthly: boolean;
+    monthlyInput: string;
   }[]>([]);
   const [nextDeductionId, setNextDeductionId] = useState(1);
   const [employmentTaxCode, setEmploymentTaxCode] = useState('');
@@ -89,18 +92,26 @@ export default function App() {
     (pct: number) => {
       setPensionPct(pct);
       const salary = sanitizeNumber(annualSalary);
-      setPensionContribution(((salary * pct) / 100).toFixed(0));
+      const annual = ((salary * pct) / 100).toFixed(0);
+      setPensionContribution(annual);
+      if (pensionContributionIsMonthly) {
+        setPensionContributionMonthlyInput((parseFloat(annual) / 12).toFixed(2));
+      }
     },
-    [annualSalary]
+    [annualSalary, pensionContributionIsMonthly]
   );
 
   // Recalc pension amount when salary changes (if using slider)
   useEffect(() => {
     if (pensionPct > 0) {
       const salary = sanitizeNumber(annualSalary);
-      setPensionContribution(((salary * pensionPct) / 100).toFixed(0));
+      const annual = ((salary * pensionPct) / 100).toFixed(0);
+      setPensionContribution(annual);
+      if (pensionContributionIsMonthly) {
+        setPensionContributionMonthlyInput((parseFloat(annual) / 12).toFixed(2));
+      }
     }
-  }, [annualSalary, pensionPct]);
+  }, [annualSalary, pensionPct, pensionContributionIsMonthly]);
 
   const parsedPostTaxDeductions: PostTaxDeduction[] = useMemo(
     () => postTaxDeductions.map((d) => ({ name: d.name || 'Deduction', amount: sanitizeNumber(d.amount) })),
@@ -244,7 +255,14 @@ export default function App() {
                   </label>
                   <PeriodToggle
                     isMonthly={salarySacrificeIsMonthly}
-                    onChange={setSalarySacrificeIsMonthly}
+                    onChange={(newIsMonthly) => {
+                      setSalarySacrificeIsMonthly(newIsMonthly);
+                      if (newIsMonthly) {
+                        setSalarySacrificeMonthlyInput(
+                          (sanitizeNumber(salarySacrifice) / 12).toFixed(2)
+                        );
+                      }
+                    }}
                   />
                 </div>
                 <div className="input-wrapper">
@@ -254,16 +272,14 @@ export default function App() {
                     className="input-field"
                     type="text"
                     inputMode="decimal"
-                    value={
-                      salarySacrificeIsMonthly
-                        ? (sanitizeNumber(salarySacrifice) / 12).toFixed(2)
-                        : salarySacrifice
-                    }
+                    value={salarySacrificeIsMonthly ? salarySacrificeMonthlyInput : salarySacrifice}
                     onChange={(e) => {
-                      const raw = sanitizeNumber(e.target.value);
-                      setSalarySacrifice(
-                        salarySacrificeIsMonthly ? (raw * 12).toFixed(2) : e.target.value
-                      );
+                      if (salarySacrificeIsMonthly) {
+                        setSalarySacrificeMonthlyInput(e.target.value);
+                        setSalarySacrifice((sanitizeNumber(e.target.value) * 12).toString());
+                      } else {
+                        setSalarySacrifice(e.target.value);
+                      }
                     }}
                     placeholder={salarySacrificeIsMonthly ? 'e.g. 200' : 'e.g. 2400'}
                     autoComplete="off"
@@ -282,7 +298,14 @@ export default function App() {
                   </label>
                   <PeriodToggle
                     isMonthly={pensionContributionIsMonthly}
-                    onChange={setPensionContributionIsMonthly}
+                    onChange={(newIsMonthly) => {
+                      setPensionContributionIsMonthly(newIsMonthly);
+                      if (newIsMonthly) {
+                        setPensionContributionMonthlyInput(
+                          (sanitizeNumber(pensionContribution) / 12).toFixed(2)
+                        );
+                      }
+                    }}
                   />
                 </div>
                 <div className="input-wrapper">
@@ -292,15 +315,14 @@ export default function App() {
                     className="input-field"
                     type="text"
                     inputMode="decimal"
-                    value={
-                      pensionContributionIsMonthly
-                        ? (sanitizeNumber(pensionContribution) / 12).toFixed(2)
-                        : pensionContribution
-                    }
+                    value={pensionContributionIsMonthly ? pensionContributionMonthlyInput : pensionContribution}
                     onChange={(e) => {
-                      const raw = sanitizeNumber(e.target.value);
-                      const annual = pensionContributionIsMonthly ? (raw * 12).toFixed(2) : e.target.value;
-                      setPensionContribution(annual);
+                      if (pensionContributionIsMonthly) {
+                        setPensionContributionMonthlyInput(e.target.value);
+                        setPensionContribution((sanitizeNumber(e.target.value) * 12).toString());
+                      } else {
+                        setPensionContribution(e.target.value);
+                      }
                       setPensionPct(0); // detach slider when typing
                     }}
                     placeholder={pensionContributionIsMonthly ? 'e.g. 683' : 'e.g. 8200'}
@@ -527,17 +549,20 @@ export default function App() {
                       className="input-field deduction-amount"
                       type="text"
                       inputMode="decimal"
-                      value={
-                        deduction.isMonthly
-                          ? (sanitizeNumber(deduction.amount) / 12).toFixed(2)
-                          : deduction.amount
-                      }
+                      value={deduction.isMonthly ? deduction.monthlyInput : deduction.amount}
                       onChange={(e) => {
-                        const raw = sanitizeNumber(e.target.value);
-                        const annual = deduction.isMonthly ? (raw * 12).toFixed(2) : e.target.value;
-                        setPostTaxDeductions((prev) =>
-                          prev.map((d) => d.id === deduction.id ? { ...d, amount: annual } : d)
-                        );
+                        if (deduction.isMonthly) {
+                          setPostTaxDeductions((prev) =>
+                            prev.map((d) => d.id === deduction.id
+                              ? { ...d, monthlyInput: e.target.value, amount: (sanitizeNumber(e.target.value) * 12).toString() }
+                              : d
+                            )
+                          );
+                        } else {
+                          setPostTaxDeductions((prev) =>
+                            prev.map((d) => d.id === deduction.id ? { ...d, amount: e.target.value } : d)
+                          );
+                        }
                       }}
                       placeholder={deduction.isMonthly ? 'e.g. 200' : 'e.g. 2400'}
                       autoComplete="off"
@@ -547,7 +572,13 @@ export default function App() {
                     isMonthly={deduction.isMonthly}
                     onChange={(isMonthly) =>
                       setPostTaxDeductions((prev) =>
-                        prev.map((d) => d.id === deduction.id ? { ...d, isMonthly } : d)
+                        prev.map((d) => {
+                          if (d.id !== deduction.id) return d;
+                          const monthlyInput = isMonthly
+                            ? (sanitizeNumber(d.amount) / 12).toFixed(2)
+                            : d.monthlyInput;
+                          return { ...d, isMonthly, monthlyInput };
+                        })
                       )
                     }
                   />
@@ -572,7 +603,7 @@ export default function App() {
                 onClick={() => {
                   setPostTaxDeductions((prev) => [
                     ...prev,
-                    { id: nextDeductionId, name: '', amount: '0', isMonthly: false },
+                    { id: nextDeductionId, name: '', amount: '0', isMonthly: false, monthlyInput: '0' },
                   ]);
                   setNextDeductionId((id) => id + 1);
                 }}
