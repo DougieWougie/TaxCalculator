@@ -214,6 +214,10 @@ export interface CalculationResult {
   // Annual figures
   grossSalary: number;
   totalSalarySacrifice: number;
+  pensionContribution: number;
+  otherSalarySacrifice: number;
+  monthlyPensionContribution: number;
+  monthlyOtherSalarySacrifice: number;
   taxableEmploymentIncome: number;
   militaryPension: number;
   totalTaxableIncome: number;
@@ -504,6 +508,10 @@ export function calculate(input: CalculationInput): CalculationResult {
   return {
     grossSalary: annualSalary,
     totalSalarySacrifice,
+    pensionContribution,
+    otherSalarySacrifice: salarySacrifice,
+    monthlyPensionContribution: pensionContribution / 12,
+    monthlyOtherSalarySacrifice: salarySacrifice / 12,
     taxableEmploymentIncome,
     militaryPension,
     totalTaxableIncome,
