@@ -768,6 +768,7 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 600px) {
   .pl-table.hide-monthly .pl-col-monthly { display: none; }
   .pl-table.hide-annual  .pl-col-annual  { display: none; }
+  .pl-table td:first-child { white-space: normal; }
 }
 
 /* Period toggle in P&L card header — hidden on desktop, visible on mobile */
