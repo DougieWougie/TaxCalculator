@@ -46,6 +46,7 @@ export default function App() {
   const [annualSalary, setAnnualSalary] = useState('45000');
   const [salarySacrifice, setSalarySacrifice] = useState('0');
   const [salarySacrificeIsMonthly, setSalarySacrificeIsMonthly] = useState(false);
+  const [plTableShowMonthly, setPlTableShowMonthly] = useState(true);
   const [salarySacrificeMonthlyInput, setSalarySacrificeMonthlyInput] = useState('0');
   const [pensionContribution, setPensionContribution] = useState('0');
   const [pensionContributionIsMonthly, setPensionContributionIsMonthly] = useState(false);
@@ -653,13 +654,20 @@ export default function App() {
               <div className="card-title">
                 <span className="card-title-icon">&#128202;</span>
                 Income &amp; Deductions
+                <span className="pl-table-period-toggle">
+                  <PeriodToggle
+                    isMonthly={plTableShowMonthly}
+                    onChange={setPlTableShowMonthly}
+                    ariaLabel="Display period"
+                  />
+                </span>
               </div>
-              <table className="pl-table">
+              <table className={`pl-table ${plTableShowMonthly ? 'hide-annual' : 'hide-monthly'}`}>
                 <thead>
                   <tr>
                     <th></th>
-                    <th>Monthly</th>
-                    <th>Annual</th>
+                    <th className="pl-col-monthly">Monthly</th>
+                    <th className="pl-col-annual">Annual</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -669,20 +677,20 @@ export default function App() {
                   </tr>
                   <tr>
                     <td>Gross Salary</td>
-                    <td>{formatCurrency(result.grossMonthlySalary)}</td>
-                    <td>{formatCurrency(result.grossSalary)}</td>
+                    <td className="pl-col-monthly">{formatCurrency(result.grossMonthlySalary)}</td>
+                    <td className="pl-col-annual">{formatCurrency(result.grossSalary)}</td>
                   </tr>
                   {hasMilitaryPension && (
                     <tr>
                       <td>Military Pension</td>
-                      <td>{formatCurrency(result.monthlyMilitaryPension)}</td>
-                      <td>{formatCurrency(result.militaryPension)}</td>
+                      <td className="pl-col-monthly">{formatCurrency(result.monthlyMilitaryPension)}</td>
+                      <td className="pl-col-annual">{formatCurrency(result.militaryPension)}</td>
                     </tr>
                   )}
                   <tr className="subtotal-row">
                     <td>Total Income</td>
-                    <td>{formatCurrency(result.grossMonthlySalary + (hasMilitaryPension ? result.monthlyMilitaryPension : 0))}</td>
-                    <td>{formatCurrency(result.grossSalary + (hasMilitaryPension ? result.militaryPension : 0))}</td>
+                    <td className="pl-col-monthly">{formatCurrency(result.grossMonthlySalary + (hasMilitaryPension ? result.monthlyMilitaryPension : 0))}</td>
+                    <td className="pl-col-annual">{formatCurrency(result.grossSalary + (hasMilitaryPension ? result.militaryPension : 0))}</td>
                   </tr>
 
                   {/* Deductions section */}
@@ -691,46 +699,46 @@ export default function App() {
                   </tr>
                   <tr>
                     <td>Income Tax</td>
-                    <td className="negative">&minus;{formatCurrency(result.monthlyTax)}</td>
-                    <td className="negative">&minus;{formatCurrency(result.incomeTax)}</td>
+                    <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyTax)}</td>
+                    <td className="pl-col-annual negative">&minus;{formatCurrency(result.incomeTax)}</td>
                   </tr>
                   <tr>
                     <td>National Insurance</td>
-                    <td className="negative">&minus;{formatCurrency(result.monthlyNI)}</td>
-                    <td className="negative">&minus;{formatCurrency(result.nationalInsurance)}</td>
+                    <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyNI)}</td>
+                    <td className="pl-col-annual negative">&minus;{formatCurrency(result.nationalInsurance)}</td>
                   </tr>
                   {result.otherSalarySacrifice > 0 && (
                     <tr>
                       <td>Pre-Tax Salary Sacrifice</td>
-                      <td className="negative">&minus;{formatCurrency(result.monthlyOtherSalarySacrifice)}</td>
-                      <td className="negative">&minus;{formatCurrency(result.otherSalarySacrifice)}</td>
+                      <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyOtherSalarySacrifice)}</td>
+                      <td className="pl-col-annual negative">&minus;{formatCurrency(result.otherSalarySacrifice)}</td>
                     </tr>
                   )}
                   {result.pensionContribution > 0 && (
                     <tr>
                       <td>Pension Contribution</td>
-                      <td className="negative">&minus;{formatCurrency(result.monthlyPensionContribution)}</td>
-                      <td className="negative">&minus;{formatCurrency(result.pensionContribution)}</td>
+                      <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyPensionContribution)}</td>
+                      <td className="pl-col-annual negative">&minus;{formatCurrency(result.pensionContribution)}</td>
                     </tr>
                   )}
                   {result.totalPostTaxDeductions > 0 && (
                     <tr>
                       <td>Post-Tax Deductions</td>
-                      <td className="negative">&minus;{formatCurrency(result.monthlyPostTaxDeductions)}</td>
-                      <td className="negative">&minus;{formatCurrency(result.totalPostTaxDeductions)}</td>
+                      <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyPostTaxDeductions)}</td>
+                      <td className="pl-col-annual negative">&minus;{formatCurrency(result.totalPostTaxDeductions)}</td>
                     </tr>
                   )}
                   <tr className="subtotal-row">
                     <td>Total Deductions</td>
-                    <td className="negative">&minus;{formatCurrency(result.monthlyTax + result.monthlyNI + result.monthlySalarySacrifice + result.monthlyPostTaxDeductions)}</td>
-                    <td className="negative">&minus;{formatCurrency(result.incomeTax + result.nationalInsurance + result.totalSalarySacrifice + result.totalPostTaxDeductions)}</td>
+                    <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyTax + result.monthlyNI + result.monthlySalarySacrifice + result.monthlyPostTaxDeductions)}</td>
+                    <td className="pl-col-annual negative">&minus;{formatCurrency(result.incomeTax + result.nationalInsurance + result.totalSalarySacrifice + result.totalPostTaxDeductions)}</td>
                   </tr>
 
                   {/* Net row */}
                   <tr className="net-row">
                     <td>Net Take-Home</td>
-                    <td>{formatCurrency(result.monthlyTakeHome)}</td>
-                    <td>{formatCurrency(result.netAnnualIncome)}</td>
+                    <td className="pl-col-monthly">{formatCurrency(result.monthlyTakeHome)}</td>
+                    <td className="pl-col-annual">{formatCurrency(result.netAnnualIncome)}</td>
                   </tr>
                 </tbody>
               </table>
