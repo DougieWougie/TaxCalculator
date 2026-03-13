@@ -1070,12 +1070,14 @@ function BarRow({
 function PeriodToggle({
   isMonthly,
   onChange,
+  ariaLabel = 'Input period',
 }: {
   isMonthly: boolean;
   onChange: (isMonthly: boolean) => void;
+  ariaLabel?: string;
 }) {
   return (
-    <div className="period-toggle" role="group" aria-label="Input period">
+    <div className="period-toggle" role="group" aria-label={ariaLabel}>
       <button
         type="button"
         className={`period-toggle-btn ${!isMonthly ? 'active' : ''}`}
