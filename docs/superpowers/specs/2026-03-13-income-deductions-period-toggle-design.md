@@ -18,9 +18,9 @@ One new boolean in `App`: `plTableShowMonthly` (default `true`).
 ## Component Changes (`src/App.tsx`)
 
 1. Add `const [plTableShowMonthly, setPlTableShowMonthly] = useState(true);` near the other toggle states.
-2. In the Income & Deductions card-title `<div>`, add a `<span className="pl-table-period-toggle">` containing `<PeriodToggle isMonthly={plTableShowMonthly} onChange={setPlTableShowMonthly} />`.
+2. Add an optional `ariaLabel?: string` prop to the `PeriodToggle` component (default `"Input period"` for backwards compatibility). In the Income & Deductions card-title `<div>`, add a `<span className="pl-table-period-toggle">` containing `<PeriodToggle isMonthly={plTableShowMonthly} onChange={setPlTableShowMonthly} ariaLabel="Display period" />`.
 3. Apply classes `pl-col-monthly` and `pl-col-annual` to the respective `<th>` and `<td>` elements for the Monthly and Annual columns.
-4. Add a conditional class on the `<table>`: `hide-monthly` when `!plTableShowMonthly`, `hide-annual` when `plTableShowMonthly`.
+4. Add a conditional class on the `<table>`: `hide-annual` when `plTableShowMonthly` is `true` (user wants monthly, so hide annual), `hide-monthly` when `plTableShowMonthly` is `false`.
 
 ## CSS Changes (`src/index.css`)
 
@@ -46,7 +46,7 @@ One new boolean in `App`: `plTableShowMonthly` (default `true`).
 
 - Default: Monthly shown on mobile.
 - Toggle is absent from the DOM visually on desktop (CSS `display: none`); both columns always visible on desktop regardless of state.
-- `section-header` rows use `colSpan={3}` — this is unaffected; hidden columns do not change visual colspan rendering.
+- `section-header` rows use `colSpan={3}` — this is intentional and desirable: CSS `display: none` hides the column cell but the `colSpan` still spans all three slots, keeping section headers full-width. No change to `colSpan` values is needed.
 - No localStorage persistence needed.
 
 ## Out of Scope
