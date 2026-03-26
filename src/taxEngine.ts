@@ -612,6 +612,31 @@ export function getOptimisationTargets(
   return targets;
 }
 
+/**
+ * Calculate the exact annual pension contribution (salary sacrifice)
+ * needed to bring taxable employment income to the target threshold.
+ *
+ * Returns the TOTAL pension contribution needed (not additional on top of existing).
+ * Returns null if already below the threshold or if the contribution would exceed
+ * available salary.
+ */
+export function calculateOptimalPension(
+  input: CalculationInput,
+  targetThreshold: number,
+): number | null {
+  const { annualSalary, salarySacrifice, pensionContribution } = input;
+  const currentTaxable = Math.max(0, annualSalary - salarySacrifice - pensionContribution);
+
+  if (currentTaxable <= targetThreshold) return null;
+
+  const pensionNeeded = annualSalary - salarySacrifice - targetThreshold;
+  const maxPension = annualSalary - salarySacrifice;
+
+  if (pensionNeeded > maxPension || pensionNeeded < 0) return null;
+
+  return pensionNeeded;
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   calculate,
   getOptimisationTargets,
+  calculateOptimalPension,
   type CalculationInput,
 } from './taxEngine';
 
@@ -128,5 +129,42 @@ describe('getOptimisationTargets', () => {
     expect(targets).toEqual([
       { name: 'Intermediate Rate (£27,491)', threshold: 27_491 },
     ]);
+  });
+});
+
+describe('calculateOptimalPension', () => {
+  it('calculates pension needed to drop below Scottish Advanced Rate threshold', () => {
+    const input = makeInput({ annualSalary: 86_800 });
+    expect(calculateOptimalPension(input, 75_000)).toBe(11_800);
+  });
+
+  it('accounts for existing pension contribution', () => {
+    const input = makeInput({ annualSalary: 86_800, pensionContribution: 5_000 });
+    expect(calculateOptimalPension(input, 75_000)).toBe(11_800);
+  });
+
+  it('accounts for existing salary sacrifice', () => {
+    const input = makeInput({ annualSalary: 86_800, salarySacrifice: 3_000 });
+    expect(calculateOptimalPension(input, 75_000)).toBe(8_800);
+  });
+
+  it('returns null when already below the threshold', () => {
+    const input = makeInput({ annualSalary: 40_000 });
+    expect(calculateOptimalPension(input, 75_000)).toBeNull();
+  });
+
+  it('returns null when required contribution would exceed available salary', () => {
+    const input = makeInput({ annualSalary: 20_000, salarySacrifice: 19_000 });
+    expect(calculateOptimalPension(input, 0)).toBe(1_000);
+  });
+
+  it('returns null when pension needed exceeds remaining salary', () => {
+    const input = makeInput({ annualSalary: 50_000, salarySacrifice: 50_000 });
+    expect(calculateOptimalPension(input, 43_662)).toBeNull();
+  });
+
+  it('handles PA taper threshold correctly', () => {
+    const input = makeInput({ annualSalary: 130_000 });
+    expect(calculateOptimalPension(input, 100_000)).toBe(30_000);
   });
 });
