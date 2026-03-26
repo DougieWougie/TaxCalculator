@@ -4,9 +4,14 @@ import {
   formatCurrency,
   formatPercent,
   parseTaxCode,
+  getOptimisationTargets,
+  calculateOptimalPension,
+  diffResults,
   type TaxRegion,
+  type CalculationInput,
   type CalculationResult,
   type PostTaxDeduction,
+  type ScenarioDiff,
 } from './taxEngine';
 
 function useTheme() {
@@ -65,6 +70,14 @@ export default function App() {
   const [nextDeductionId, setNextDeductionId] = useState(1);
   const [employmentTaxCode, setEmploymentTaxCode] = useState('');
   const [militaryPensionTaxCode, setMilitaryPensionTaxCode] = useState('');
+
+  // Scenario comparison
+  const [baseline, setBaseline] = useState<{
+    input: CalculationInput;
+    result: CalculationResult;
+  } | null>(null);
+  const [scenarioPreset, setScenarioPreset] = useState<string | null>(null);
+  const [scenarioInput, setScenarioInput] = useState<CalculationInput | null>(null);
 
   // Slider for pension % (convenience)
   const [pensionPct, setPensionPct] = useState(0);
@@ -145,7 +158,38 @@ export default function App() {
     [annualSalary, salarySacrifice, pensionContribution, employerPension, militaryPension, hasMilitaryPension, parsedPostTaxDeductions, taxRegion, employmentTaxCode, militaryPensionTaxCode]
   );
 
+  const currentInput: CalculationInput = useMemo(
+    () => ({
+      annualSalary: sanitizeNumber(annualSalary),
+      salarySacrifice: sanitizeNumber(salarySacrifice),
+      pensionContribution: sanitizeNumber(pensionContribution),
+      employerPension: sanitizeNumber(employerPension),
+      militaryPension: hasMilitaryPension ? sanitizeNumber(militaryPension) : 0,
+      postTaxDeductions: parsedPostTaxDeductions,
+      taxRegion,
+      employmentTaxCode,
+      militaryPensionTaxCode: hasMilitaryPension ? militaryPensionTaxCode : '',
+    }),
+    [annualSalary, salarySacrifice, pensionContribution, employerPension, militaryPension, hasMilitaryPension, parsedPostTaxDeductions, taxRegion, employmentTaxCode, militaryPensionTaxCode]
+  );
+
+  const scenarioResult: CalculationResult | null = useMemo(
+    () => scenarioInput ? calculate(scenarioInput) : null,
+    [scenarioInput]
+  );
+
+  const scenarioDiff: ScenarioDiff | null = useMemo(
+    () => (baseline && scenarioResult) ? diffResults(baseline.result, scenarioResult) : null,
+    [baseline, scenarioResult]
+  );
+
   const totalGross = sanitizeNumber(annualSalary) + (hasMilitaryPension ? sanitizeNumber(militaryPension) : 0);
+
+  // Forward references used in Tasks 7-8 (ScenarioComparison wiring)
+  void scenarioPreset;
+  void scenarioDiff;
+  void getOptimisationTargets;
+  void calculateOptimalPension;
 
   return (
     <>
@@ -627,6 +671,32 @@ export default function App() {
               <div className="summary-hero-sub">
                 {formatCurrency(result.netAnnualIncome)} per year
               </div>
+            </div>
+
+            {/* Save as Baseline */}
+            <div className="baseline-actions">
+              <button
+                className="baseline-btn"
+                onClick={() => {
+                  setBaseline({ input: currentInput, result });
+                  setScenarioPreset(null);
+                  setScenarioInput(null);
+                }}
+              >
+                {baseline ? 'Update Baseline' : 'Save as Baseline'}
+              </button>
+              {baseline && (
+                <button
+                  className="baseline-clear"
+                  onClick={() => {
+                    setBaseline(null);
+                    setScenarioPreset(null);
+                    setScenarioInput(null);
+                  }}
+                >
+                  Clear
+                </button>
+              )}
             </div>
 
             {/* Net salary / net military pension sub-tiles */}

@@ -5,7 +5,6 @@ import {
   calculateOptimalPension,
   diffResults,
   type CalculationInput,
-  type CalculationResult,
 } from './taxEngine';
 
 // Helper: run a minimal calculation and return annual income tax
