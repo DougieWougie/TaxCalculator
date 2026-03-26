@@ -576,8 +576,8 @@ export interface ScenarioDiff {
  * by increasing pension contributions. Only returns thresholds
  * that the user's taxable employment income currently exceeds.
  *
- * Skips low-rate bands (PA, Starter, Basic — rate < 21%) and returns
- * at most the two highest meaningful thresholds the user has crossed.
+ * Note: uses employment income only. Military pension income is excluded
+ * because salary sacrifice cannot reduce military pension.
  */
 export function getOptimisationTargets(
   input: CalculationInput,
@@ -589,7 +589,7 @@ export function getOptimisationTargets(
   const candidates: OptimisationTarget[] = [];
 
   for (const band of bands) {
-    // Skip zero/low-rate bands (PA 0%, Starter 19%, Basic 20%) and top-rate Infinity bands
+    // Skip PA (0%), Starter (19%), Basic (20%) — no meaningful tax saving from these thresholds
     if (band.rate < 0.21) continue;
     if (band.upperBound === Infinity) continue;
     if (taxableIncome > band.threshold) {
@@ -648,6 +648,7 @@ export function diffResults(
   return {
     grossSalary: b.grossSalary - a.grossSalary,
     pensionContribution: b.pensionContribution - a.pensionContribution,
+    // Uses otherSalarySacrifice (non-pension sacrifice only) since pensionContribution is diffed separately
     salarySacrifice: b.otherSalarySacrifice - a.otherSalarySacrifice,
     incomeTax: b.incomeTax - a.incomeTax,
     nationalInsurance: b.nationalInsurance - a.nationalInsurance,

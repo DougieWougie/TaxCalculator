@@ -155,7 +155,7 @@ describe('calculateOptimalPension', () => {
     expect(calculateOptimalPension(input, 75_000)).toBeNull();
   });
 
-  it('returns null when required contribution would exceed available salary', () => {
+  it('calculates pension when available salary is constrained', () => {
     const input = makeInput({ annualSalary: 20_000, salarySacrifice: 19_000 });
     expect(calculateOptimalPension(input, 0)).toBe(1_000);
   });
