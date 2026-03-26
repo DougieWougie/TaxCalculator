@@ -330,6 +330,213 @@ body {
   flex-shrink: 0;
 }
 
+/* --- Scenario Comparison --- */
+
+.baseline-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.baseline-btn {
+  flex: 1;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--bg-input);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.baseline-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+
+.baseline-clear {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.baseline-clear:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.preset-btn {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.preset-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.preset-sub-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: var(--bg-input);
+}
+
+.preset-sub-btn {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-sub-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.preset-sub-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.preset-param-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.preset-param-row .input-wrapper {
+  flex: 1;
+  max-width: 180px;
+}
+
+.preset-param-row .input-field {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.preset-apply-btn {
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-apply-btn:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparison-table th {
+  padding: 0.5rem 0.75rem;
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparison-table th:first-child {
+  text-align: left;
+}
+
+.comparison-table td {
+  padding: 0.45rem 0.75rem;
+  text-align: right;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+
+.comparison-table td:first-child {
+  text-align: left;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.comparison-table .delta-positive {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.comparison-table .delta-negative {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.comparison-table .delta-neutral {
+  color: var(--text-muted);
+}
+
+.comparison-table .highlight-row td {
+  font-weight: 700;
+  border-top: 2px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+.scenario-summary {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--bg-input);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.scenario-summary strong {
+  color: var(--text-primary);
+}
+
 /* Main grid */
 .main-grid {
   display: grid;
@@ -1205,6 +1412,28 @@ input[type="range"]::-moz-range-thumb {
   .slider-value {
     min-width: 60px;
     font-size: 0.9rem;
+  }
+
+  .preset-buttons {
+    flex-direction: column;
+  }
+
+  .preset-param-row {
+    flex-wrap: wrap;
+  }
+
+  .preset-param-row .input-wrapper {
+    max-width: none;
+    flex: 1;
+  }
+
+  .comparison-table {
+    font-size: 0.78rem;
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 0.4rem 0.5rem;
   }
 }
 
