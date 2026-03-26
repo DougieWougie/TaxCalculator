@@ -3,7 +3,9 @@ import {
   calculate,
   getOptimisationTargets,
   calculateOptimalPension,
+  diffResults,
   type CalculationInput,
+  type CalculationResult,
 } from './taxEngine';
 
 // Helper: run a minimal calculation and return annual income tax
@@ -166,5 +168,61 @@ describe('calculateOptimalPension', () => {
   it('handles PA taper threshold correctly', () => {
     const input = makeInput({ annualSalary: 130_000 });
     expect(calculateOptimalPension(input, 100_000)).toBe(30_000);
+  });
+});
+
+describe('diffResults', () => {
+  it('calculates correct deltas between two results', () => {
+    const inputA = makeInput({ annualSalary: 55_000 });
+    const inputB = makeInput({ annualSalary: 60_000 });
+    const resultA = calculate(inputA);
+    const resultB = calculate(inputB);
+    const diff = diffResults(resultA, resultB);
+
+    expect(diff.grossSalary).toBe(resultB.grossSalary - resultA.grossSalary);
+    expect(diff.grossSalary).toBe(5_000);
+    expect(diff.incomeTax).toBe(resultB.incomeTax - resultA.incomeTax);
+    expect(diff.nationalInsurance).toBe(resultB.nationalInsurance - resultA.nationalInsurance);
+    expect(diff.monthlyTakeHome).toBe(resultB.monthlyTakeHome - resultA.monthlyTakeHome);
+    expect(diff.netAnnualIncome).toBe(resultB.netAnnualIncome - resultA.netAnnualIncome);
+  });
+
+  it('returns zero deltas for identical results', () => {
+    const input = makeInput({ annualSalary: 55_000 });
+    const result = calculate(input);
+    const diff = diffResults(result, result);
+
+    expect(diff.grossSalary).toBe(0);
+    expect(diff.incomeTax).toBe(0);
+    expect(diff.nationalInsurance).toBe(0);
+    expect(diff.monthlyTakeHome).toBe(0);
+    expect(diff.netAnnualIncome).toBe(0);
+    expect(diff.effectiveTaxRate).toBe(0);
+    expect(diff.totalPensionPot).toBe(0);
+  });
+
+  it('shows negative deltas when scenario B has lower take-home', () => {
+    const inputA = makeInput({ annualSalary: 60_000 });
+    const inputB = makeInput({ annualSalary: 50_000 });
+    const resultA = calculate(inputA);
+    const resultB = calculate(inputB);
+    const diff = diffResults(resultA, resultB);
+
+    expect(diff.grossSalary).toBeLessThan(0);
+    expect(diff.netAnnualIncome).toBeLessThan(0);
+    expect(diff.monthlyTakeHome).toBeLessThan(0);
+  });
+
+  it('handles pension optimisation scenario', () => {
+    const inputA = makeInput({ annualSalary: 86_800 });
+    const inputB = makeInput({ annualSalary: 86_800, pensionContribution: 11_800 });
+    const resultA = calculate(inputA);
+    const resultB = calculate(inputB);
+    const diff = diffResults(resultA, resultB);
+
+    expect(diff.pensionContribution).toBe(11_800);
+    expect(diff.totalPensionPot).toBe(11_800);
+    expect(diff.netAnnualIncome).toBeLessThan(0);
+    expect(diff.incomeTax).toBeLessThan(0);
   });
 });

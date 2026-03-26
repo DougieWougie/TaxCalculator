@@ -637,6 +637,28 @@ export function calculateOptimalPension(
   return pensionNeeded;
 }
 
+/**
+ * Calculate the difference between two calculation results.
+ * Returns b - a for each field (positive = b is higher).
+ */
+export function diffResults(
+  a: CalculationResult,
+  b: CalculationResult,
+): ScenarioDiff {
+  return {
+    grossSalary: b.grossSalary - a.grossSalary,
+    pensionContribution: b.pensionContribution - a.pensionContribution,
+    salarySacrifice: b.otherSalarySacrifice - a.otherSalarySacrifice,
+    incomeTax: b.incomeTax - a.incomeTax,
+    nationalInsurance: b.nationalInsurance - a.nationalInsurance,
+    monthlyTakeHome: b.monthlyTakeHome - a.monthlyTakeHome,
+    netAnnualIncome: b.netAnnualIncome - a.netAnnualIncome,
+    effectiveTaxRate: b.effectiveTaxRate - a.effectiveTaxRate,
+    marginalTaxRate: b.marginalTaxRate - a.marginalTaxRate,
+    totalPensionPot: b.totalPensionPot - a.totalPensionPot,
+  };
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
