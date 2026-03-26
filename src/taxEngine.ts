@@ -262,11 +262,11 @@ export interface CalculationResult {
 }
 
 // Personal Allowance 2025-26
-const BASE_PERSONAL_ALLOWANCE = 12_570;
-const PA_TAPER_THRESHOLD = 100_000;
+export const BASE_PERSONAL_ALLOWANCE = 12_570;
+export const PA_TAPER_THRESHOLD = 100_000;
 
 // Scottish Income Tax Bands 2025-26
-const SCOTTISH_TAX_BANDS: TaxBand[] = [
+export const SCOTTISH_TAX_BANDS: TaxBand[] = [
   { name: 'Personal Allowance', threshold: 0,       upperBound: 12_570,   rate: 0    },
   { name: 'Starter Rate',       threshold: 12_570,  upperBound: 15_397,   rate: 0.19 },
   { name: 'Basic Rate',         threshold: 15_397,  upperBound: 27_491,   rate: 0.20 },
@@ -277,7 +277,7 @@ const SCOTTISH_TAX_BANDS: TaxBand[] = [
 ];
 
 // English/Welsh/NI Income Tax Bands 2025-26
-const ENGLISH_TAX_BANDS: TaxBand[] = [
+export const ENGLISH_TAX_BANDS: TaxBand[] = [
   { name: 'Personal Allowance', threshold: 0,       upperBound: 12_570,   rate: 0    },
   { name: 'Basic Rate',         threshold: 12_570,  upperBound: 50_270,   rate: 0.20 },
   { name: 'Higher Rate',        threshold: 50_270,  upperBound: 125_140,  rate: 0.40 },
@@ -549,6 +549,26 @@ export function calculate(input: CalculationInput): CalculationResult {
     effectiveTaxRate,
     marginalTaxRate,
   };
+}
+
+// --- Scenario Comparison ---
+
+export interface OptimisationTarget {
+  name: string;
+  threshold: number;
+}
+
+export interface ScenarioDiff {
+  grossSalary: number;
+  pensionContribution: number;
+  salarySacrifice: number;
+  incomeTax: number;
+  nationalInsurance: number;
+  monthlyTakeHome: number;
+  netAnnualIncome: number;
+  effectiveTaxRate: number;
+  marginalTaxRate: number;
+  totalPensionPot: number;
 }
 
 export function formatCurrency(amount: number): string {
