@@ -159,7 +159,7 @@ describe('calculateOptimalPension', () => {
     expect(calculateOptimalPension(input, 0)).toBe(1_000);
   });
 
-  it('returns null when pension needed exceeds remaining salary', () => {
+  it('returns null when already below threshold due to full sacrifice', () => {
     const input = makeInput({ annualSalary: 50_000, salarySacrifice: 50_000 });
     expect(calculateOptimalPension(input, 43_662)).toBeNull();
   });

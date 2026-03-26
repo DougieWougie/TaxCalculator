@@ -49,12 +49,11 @@ Given current inputs and a target taxable income threshold, returns the exact an
 
 Logic: `targetPension = taxableEmploymentIncome - targetThreshold + existingPensionContribution`, clamped to `[0, salary - otherSacrifice]`.
 
-**`generatePresetScenario(input: CalculationInput, preset: PresetType, params: PresetParams): CalculationInput`**
+**Preset scenario logic** is implemented as inline callbacks in `App.tsx` (`handleApplyOptimise`, `handleApplySalaryChange`, `handleApplySacrifice`) rather than a standalone engine function — the logic is simple enough that a formal `generatePresetScenario` function would add indirection without benefit.
 
-Returns a modified copy of `input` based on the preset:
-- `'optimise-tax-band'`: Sets `pensionContribution` to result of `calculateOptimalPension(input, params.targetThreshold)`
-- `'salary-change'`: Sets `annualSalary` to `input.annualSalary + params.amount` (absolute) or `input.annualSalary * (1 + params.percentage / 100)` (percentage)
-- `'add-sacrifice'`: Sets `salarySacrifice` to `input.salarySacrifice + params.amount`
+**`getOptimisationTargets(input: CalculationInput, result: CalculationResult): OptimisationTarget[]`**
+
+Returns tax band thresholds the user could optimise down to by increasing pension contributions. Only returns thresholds above the user's current taxable employment income. Uses employment income only (military pension excluded — salary sacrifice cannot reduce military pension).
 
 **`diffResults(a: CalculationResult, b: CalculationResult): ScenarioDiff`**
 
