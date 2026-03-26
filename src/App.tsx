@@ -12,6 +12,7 @@ import {
   type CalculationResult,
   type PostTaxDeduction,
   type ScenarioDiff,
+  type OptimisationTarget,
 } from './taxEngine';
 
 function useTheme() {
@@ -224,7 +225,7 @@ export default function App() {
       if (!baseline) return;
       const modified: CalculationInput = {
         ...baseline.input,
-        salarySacrifice: baseline.input.salarySacrifice + amount,
+        salarySacrifice: Math.min(baseline.input.salarySacrifice + amount, baseline.input.annualSalary),
       };
       setScenarioInput(modified);
     },
@@ -1322,7 +1323,7 @@ function ScenarioComparison({
   onApplyOptimise: (threshold: number) => void;
   onApplySalaryChange: (amount: number, isPercentage: boolean) => void;
   onApplySacrifice: (amount: number) => void;
-  optimisationTargets: { name: string; threshold: number }[];
+  optimisationTargets: OptimisationTarget[];
 }) {
   const [salaryChangeValue, setSalaryChangeValue] = useState('');
   const [salaryChangeIsPercent, setSalaryChangeIsPercent] = useState(true);
@@ -1332,9 +1333,8 @@ function ScenarioComparison({
     const displayValue = invertSign ? -value : value;
     if (Math.abs(value) < 0.005) return { text: '\u2014', className: 'delta-neutral' };
     const sign = displayValue > 0 ? '+' : '';
-    const text = isCurrency
-      ? `${sign}${formatCurrency(displayValue)}`
-      : `${sign}${formatPercent(displayValue)}`;
+    const formatted = isCurrency ? formatCurrency(Math.abs(displayValue)) : formatPercent(Math.abs(displayValue));
+    const text = displayValue >= 0 ? `${sign}${formatted}` : `\u2212${formatted}`;
     const className = displayValue > 0 ? 'delta-positive' : 'delta-negative';
     return { text, className };
   };
@@ -1515,13 +1515,13 @@ function ScenarioComparison({
 
           {/* Summary sentence */}
           <div className="scenario-summary">
-            {scenarioDiff.monthlyTakeHome >= 0 ? (
+            {scenarioDiff.monthlyTakeHome > 0 ? (
               <>
                 Scenario increases take-home by{' '}
                 <strong>{formatCurrency(Math.abs(scenarioDiff.monthlyTakeHome))}/mo</strong>
                 {' '}({formatCurrency(Math.abs(scenarioDiff.netAnnualIncome))}/yr)
               </>
-            ) : (
+            ) : scenarioDiff.monthlyTakeHome < 0 ? (
               <>
                 Scenario reduces take-home by{' '}
                 <strong>{formatCurrency(Math.abs(scenarioDiff.monthlyTakeHome))}/mo</strong>
@@ -1533,6 +1533,8 @@ function ScenarioComparison({
                   <>, saving <strong>{formatCurrency(Math.abs(scenarioDiff.incomeTax))}/yr</strong> in tax</>
                 )}
               </>
+            ) : (
+              <span>No change to take-home pay.</span>
             )}
           </div>
         </>
