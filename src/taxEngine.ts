@@ -571,6 +571,47 @@ export interface ScenarioDiff {
   totalPensionPot: number;
 }
 
+/**
+ * Get the tax band thresholds the user could optimise down to
+ * by increasing pension contributions. Only returns thresholds
+ * that the user's taxable employment income currently exceeds.
+ *
+ * Skips low-rate bands (PA, Starter, Basic — rate < 21%) and returns
+ * at most the two highest meaningful thresholds the user has crossed.
+ */
+export function getOptimisationTargets(
+  input: CalculationInput,
+  result: CalculationResult,
+): OptimisationTarget[] {
+  const taxableIncome = result.taxableEmploymentIncome;
+  const bands = input.taxRegion === 'scottish' ? SCOTTISH_TAX_BANDS : ENGLISH_TAX_BANDS;
+
+  const candidates: OptimisationTarget[] = [];
+
+  for (const band of bands) {
+    // Skip zero/low-rate bands (PA 0%, Starter 19%, Basic 20%) and top-rate Infinity bands
+    if (band.rate < 0.21) continue;
+    if (band.upperBound === Infinity) continue;
+    if (taxableIncome > band.threshold) {
+      const label = `${band.name} (${formatCurrency(band.threshold).replace('.00', '')})`;
+      candidates.push({ name: label, threshold: band.threshold });
+    }
+  }
+
+  // Return at most the two highest thresholds (nearest meaningful optimisation targets)
+  const targets = candidates.slice(-2);
+
+  // PA taper target
+  if (taxableIncome > PA_TAPER_THRESHOLD) {
+    targets.push({
+      name: `PA Taper (${formatCurrency(PA_TAPER_THRESHOLD).replace('.00', '')})`,
+      threshold: PA_TAPER_THRESHOLD,
+    });
+  }
+
+  return targets;
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { calculate } from './taxEngine';
+import {
+  calculate,
+  getOptimisationTargets,
+  type CalculationInput,
+} from './taxEngine';
 
 // Helper: run a minimal calculation and return annual income tax
 function calcTax(annualSalary: number, region: 'scottish' | 'english' = 'scottish'): number {
@@ -64,5 +68,65 @@ describe('English tax bands 2025-26', () => {
     // £50,270 — top of Basic Rate
     // Basic: £37,700 @ 20% = £7,540
     expect(calcTax(50_270, 'english')).toBeCloseTo(7_540, 0);
+  });
+});
+
+// Helper: build a standard CalculationInput
+function makeInput(overrides: Partial<CalculationInput> = {}): CalculationInput {
+  return {
+    annualSalary: 45_000,
+    salarySacrifice: 0,
+    pensionContribution: 0,
+    employerPension: 0,
+    militaryPension: 0,
+    postTaxDeductions: [],
+    taxRegion: 'scottish',
+    employmentTaxCode: '',
+    militaryPensionTaxCode: '',
+    ...overrides,
+  };
+}
+
+describe('getOptimisationTargets', () => {
+  it('returns relevant thresholds above which the user currently sits (Scottish)', () => {
+    const input = makeInput({ annualSalary: 86_800 });
+    const result = calculate(input);
+    const targets = getOptimisationTargets(input, result);
+    expect(targets).toEqual([
+      { name: 'Higher Rate (£43,662)', threshold: 43_662 },
+      { name: 'Advanced Rate (£75,000)', threshold: 75_000 },
+    ]);
+  });
+
+  it('returns PA taper target when income is above £100k (Scottish)', () => {
+    const input = makeInput({ annualSalary: 130_000 });
+    const result = calculate(input);
+    const targets = getOptimisationTargets(input, result);
+    expect(targets).toContainEqual({ name: 'PA Taper (£100,000)', threshold: 100_000 });
+  });
+
+  it('returns relevant thresholds for English taxpayer', () => {
+    const input = makeInput({ annualSalary: 60_000, taxRegion: 'english' });
+    const result = calculate(input);
+    const targets = getOptimisationTargets(input, result);
+    expect(targets).toEqual([
+      { name: 'Higher Rate (£50,270)', threshold: 50_270 },
+    ]);
+  });
+
+  it('returns empty array when income is in Personal Allowance band', () => {
+    const input = makeInput({ annualSalary: 12_000 });
+    const result = calculate(input);
+    const targets = getOptimisationTargets(input, result);
+    expect(targets).toEqual([]);
+  });
+
+  it('accounts for existing salary sacrifice when determining taxable income', () => {
+    const input = makeInput({ annualSalary: 50_000, salarySacrifice: 8_000 });
+    const result = calculate(input);
+    const targets = getOptimisationTargets(input, result);
+    expect(targets).toEqual([
+      { name: 'Intermediate Rate (£27,491)', threshold: 27_491 },
+    ]);
   });
 });
