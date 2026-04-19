@@ -15,49 +15,27 @@ import {
   type ScenarioDiff,
   type OptimisationTarget,
 } from './taxEngine';
-
-function useTheme() {
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const stored = localStorage.getItem('theme');
-    if (stored) return stored === 'dark';
-    return true; // dark by default
-  });
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
-
-  return { isDark, toggle: () => setIsDark((d) => !d) };
-}
-
-function sanitizeNumber(value: string): number {
-  const cleaned = value.replace(/[^0-9.]/g, '');
-  const parsed = parseFloat(cleaned);
-  if (Number.isNaN(parsed) || parsed < 0) return 0;
-  return Math.min(parsed, 10_000_000); // cap at £10m
-}
+import { sanitizeNumber } from './sanitize';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { useTheme } from './hooks/useTheme';
+import { useNumericInput } from './hooks/useNumericInput';
 
 export default function App() {
   const { isDark, toggle } = useTheme();
-  const [showDisclaimer, setShowDisclaimer] = useState(() => {
-    return localStorage.getItem('disclaimer-dismissed') !== 'true';
-  });
+  const [disclaimerDismissed, setDisclaimerDismissed] = useLocalStorage<boolean>(
+    'disclaimer-dismissed',
+    false
+  );
+  const showDisclaimer = !disclaimerDismissed;
 
   const dismissDisclaimer = useCallback(() => {
-    setShowDisclaimer(false);
-    localStorage.setItem('disclaimer-dismissed', 'true');
-  }, []);
+    setDisclaimerDismissed(true);
+  }, [setDisclaimerDismissed]);
 
   const [annualSalary, setAnnualSalary] = useState('45000');
-  const [salarySacrifice, setSalarySacrifice] = useState('0');
-  const [salarySacrificeIsMonthly, setSalarySacrificeIsMonthly] = useState(false);
+  const salarySacrificeInput = useNumericInput('0');
+  const pensionContributionInput = useNumericInput('0');
   const [plTableShowMonthly, setPlTableShowMonthly] = useState(true);
-  const [salarySacrificeMonthlyInput, setSalarySacrificeMonthlyInput] = useState('0');
-  const [pensionContribution, setPensionContribution] = useState('0');
-  const [pensionContributionIsMonthly, setPensionContributionIsMonthly] = useState(false);
-  const [pensionContributionMonthlyInput, setPensionContributionMonthlyInput] = useState('0');
   const [employerPension, setEmployerPension] = useState('0');
   const [militaryPension, setMilitaryPension] = useState('0');
   const [hasMilitaryPension, setHasMilitaryPension] = useState(false);
@@ -104,30 +82,24 @@ export default function App() {
     }
   }, [annualSalary, employerPensionPct]);
 
+  const { setAnnualValue: setPensionAnnualValue } = pensionContributionInput;
+
   const handlePensionPctChange = useCallback(
     (pct: number) => {
       setPensionPct(pct);
       const salary = sanitizeNumber(annualSalary);
-      const annual = ((salary * pct) / 100).toFixed(0);
-      setPensionContribution(annual);
-      if (pensionContributionIsMonthly) {
-        setPensionContributionMonthlyInput((parseFloat(annual) / 12).toFixed(2));
-      }
+      setPensionAnnualValue(Math.round((salary * pct) / 100));
     },
-    [annualSalary, pensionContributionIsMonthly]
+    [annualSalary, setPensionAnnualValue]
   );
 
   // Recalc pension amount when salary changes (if using slider)
   useEffect(() => {
     if (pensionPct > 0) {
       const salary = sanitizeNumber(annualSalary);
-      const annual = ((salary * pensionPct) / 100).toFixed(0);
-      setPensionContribution(annual);
-      if (pensionContributionIsMonthly) {
-        setPensionContributionMonthlyInput((parseFloat(annual) / 12).toFixed(2));
-      }
+      setPensionAnnualValue(Math.round((salary * pensionPct) / 100));
     }
-  }, [annualSalary, pensionPct, pensionContributionIsMonthly]);
+  }, [annualSalary, pensionPct, setPensionAnnualValue]);
 
   const parsedPostTaxDeductions: PostTaxDeduction[] = useMemo(
     () => postTaxDeductions.map((d) => ({ name: d.name || 'Deduction', amount: sanitizeNumber(d.amount) })),
@@ -144,27 +116,11 @@ export default function App() {
     [militaryPensionTaxCode]
   );
 
-  const result: CalculationResult = useMemo(
-    () =>
-      calculate({
-        annualSalary: sanitizeNumber(annualSalary),
-        salarySacrifice: sanitizeNumber(salarySacrifice),
-        pensionContribution: sanitizeNumber(pensionContribution),
-        employerPension: sanitizeNumber(employerPension),
-        militaryPension: hasMilitaryPension ? sanitizeNumber(militaryPension) : 0,
-        postTaxDeductions: parsedPostTaxDeductions,
-        taxRegion,
-        employmentTaxCode,
-        militaryPensionTaxCode: hasMilitaryPension ? militaryPensionTaxCode : '',
-      }),
-    [annualSalary, salarySacrifice, pensionContribution, employerPension, militaryPension, hasMilitaryPension, parsedPostTaxDeductions, taxRegion, employmentTaxCode, militaryPensionTaxCode]
-  );
-
   const currentInput: CalculationInput = useMemo(
     () => ({
       annualSalary: sanitizeNumber(annualSalary),
-      salarySacrifice: sanitizeNumber(salarySacrifice),
-      pensionContribution: sanitizeNumber(pensionContribution),
+      salarySacrifice: salarySacrificeInput.annualValue,
+      pensionContribution: pensionContributionInput.annualValue,
       employerPension: sanitizeNumber(employerPension),
       militaryPension: hasMilitaryPension ? sanitizeNumber(militaryPension) : 0,
       postTaxDeductions: parsedPostTaxDeductions,
@@ -172,7 +128,12 @@ export default function App() {
       employmentTaxCode,
       militaryPensionTaxCode: hasMilitaryPension ? militaryPensionTaxCode : '',
     }),
-    [annualSalary, salarySacrifice, pensionContribution, employerPension, militaryPension, hasMilitaryPension, parsedPostTaxDeductions, taxRegion, employmentTaxCode, militaryPensionTaxCode]
+    [annualSalary, salarySacrificeInput.annualValue, pensionContributionInput.annualValue, employerPension, militaryPension, hasMilitaryPension, parsedPostTaxDeductions, taxRegion, employmentTaxCode, militaryPensionTaxCode]
+  );
+
+  const result: CalculationResult = useMemo(
+    () => calculate(currentInput),
+    [currentInput]
   );
 
   const scenarioResult: CalculationResult | null = useMemo(
@@ -341,15 +302,8 @@ export default function App() {
                     Pre-Tax Salary Sacrifice (excl. pension)
                   </label>
                   <PeriodToggle
-                    isMonthly={salarySacrificeIsMonthly}
-                    onChange={(newIsMonthly) => {
-                      setSalarySacrificeIsMonthly(newIsMonthly);
-                      if (newIsMonthly) {
-                        setSalarySacrificeMonthlyInput(
-                          (sanitizeNumber(salarySacrifice) / 12).toFixed(2)
-                        );
-                      }
-                    }}
+                    isMonthly={salarySacrificeInput.isMonthly}
+                    onChange={salarySacrificeInput.setIsMonthly}
                   />
                 </div>
                 <div className="input-wrapper">
@@ -359,22 +313,15 @@ export default function App() {
                     className="input-field"
                     type="text"
                     inputMode="decimal"
-                    value={salarySacrificeIsMonthly ? salarySacrificeMonthlyInput : salarySacrifice}
-                    onChange={(e) => {
-                      if (salarySacrificeIsMonthly) {
-                        setSalarySacrificeMonthlyInput(e.target.value);
-                        setSalarySacrifice((sanitizeNumber(e.target.value) * 12).toString());
-                      } else {
-                        setSalarySacrifice(e.target.value);
-                      }
-                    }}
-                    placeholder={salarySacrificeIsMonthly ? 'e.g. 200' : 'e.g. 2400'}
+                    value={salarySacrificeInput.displayValue}
+                    onChange={(e) => salarySacrificeInput.setDisplay(e.target.value)}
+                    placeholder={salarySacrificeInput.isMonthly ? 'e.g. 200' : 'e.g. 2400'}
                     autoComplete="off"
                   />
                 </div>
                 <p className="input-hint">
                   E.g. cycle-to-work, childcare vouchers — enter{' '}
-                  {salarySacrificeIsMonthly ? 'monthly' : 'annual'} amount
+                  {salarySacrificeInput.isMonthly ? 'monthly' : 'annual'} amount
                 </p>
               </div>
 
@@ -384,15 +331,8 @@ export default function App() {
                     Pension Contribution (salary sacrifice)
                   </label>
                   <PeriodToggle
-                    isMonthly={pensionContributionIsMonthly}
-                    onChange={(newIsMonthly) => {
-                      setPensionContributionIsMonthly(newIsMonthly);
-                      if (newIsMonthly) {
-                        setPensionContributionMonthlyInput(
-                          (sanitizeNumber(pensionContribution) / 12).toFixed(2)
-                        );
-                      }
-                    }}
+                    isMonthly={pensionContributionInput.isMonthly}
+                    onChange={pensionContributionInput.setIsMonthly}
                   />
                 </div>
                 <div className="input-wrapper">
@@ -402,17 +342,12 @@ export default function App() {
                     className="input-field"
                     type="text"
                     inputMode="decimal"
-                    value={pensionContributionIsMonthly ? pensionContributionMonthlyInput : pensionContribution}
+                    value={pensionContributionInput.displayValue}
                     onChange={(e) => {
-                      if (pensionContributionIsMonthly) {
-                        setPensionContributionMonthlyInput(e.target.value);
-                        setPensionContribution((sanitizeNumber(e.target.value) * 12).toString());
-                      } else {
-                        setPensionContribution(e.target.value);
-                      }
+                      pensionContributionInput.setDisplay(e.target.value);
                       setPensionPct(0); // detach slider when typing
                     }}
-                    placeholder={pensionContributionIsMonthly ? 'e.g. 683' : 'e.g. 8200'}
+                    placeholder={pensionContributionInput.isMonthly ? 'e.g. 683' : 'e.g. 8200'}
                     autoComplete="off"
                   />
                 </div>
@@ -426,7 +361,7 @@ export default function App() {
                 />
                 <p className="input-hint">
                   Drag the slider to set as % of gross salary, or enter{' '}
-                  {pensionContributionIsMonthly ? 'monthly' : 'annual'} amount above
+                  {pensionContributionInput.isMonthly ? 'monthly' : 'annual'} amount above
                 </p>
               </div>
 
@@ -1074,7 +1009,7 @@ export default function App() {
                 <div className="stats-grid">
                   <div className="stat-card">
                     <div className="stat-label">Your Contribution</div>
-                    <div className="stat-value">{formatCurrency(sanitizeNumber(pensionContribution))}</div>
+                    <div className="stat-value">{formatCurrency(pensionContributionInput.annualValue)}</div>
                   </div>
                   <div className="stat-card">
                     <div className="stat-label">Employer Contribution</div>
@@ -1088,9 +1023,9 @@ export default function App() {
                 <div className="rates-info">
                   <span aria-hidden="true">&#9432;</span>
                   <div>
-                    Your contribution of {formatCurrency(sanitizeNumber(pensionContribution))}/year is via salary sacrifice (pre-tax), saving you{' '}
+                    Your contribution of {formatCurrency(pensionContributionInput.annualValue)}/year is via salary sacrifice (pre-tax), saving you{' '}
                     {formatCurrency(
-                      sanitizeNumber(pensionContribution) * (result.effectiveTaxRate > 0
+                      pensionContributionInput.annualValue * (result.effectiveTaxRate > 0
                         ? result.marginalTaxRate + (result.taxableEmploymentIncome >= 50_270 ? 0.02 : result.taxableEmploymentIncome > 12_570 ? 0.08 : 0)
                         : 0)
                     )}{' '}
