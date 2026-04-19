@@ -391,6 +391,92 @@ function getMarginalTaxRate(totalIncome: number, region: TaxRegion): number {
   return marginalRate;
 }
 
+/**
+ * Internal representation of a taxable income stream. Employment is NI-liable;
+ * pension streams (military, occupational) are not. Salary sacrifice and pension
+ * contributions reduce the first NI-liable source only — you cannot salary-sacrifice
+ * a pension income stream.
+ */
+interface IncomeSource {
+  label: 'employment' | 'military';
+  amount: number;
+  code: TaxCodeInfo | null;
+  niLiable: boolean;
+}
+
+function buildSources(input: CalculationInput): IncomeSource[] {
+  const empCode = input.employmentTaxCode ? parseTaxCode(input.employmentTaxCode) : null;
+  const milCode = input.militaryPensionTaxCode ? parseTaxCode(input.militaryPensionTaxCode) : null;
+
+  const employmentAmount = Math.max(
+    0,
+    input.annualSalary - input.salarySacrifice - input.pensionContribution,
+  );
+
+  const sources: IncomeSource[] = [
+    {
+      label: 'employment',
+      amount: employmentAmount,
+      code: empCode && empCode.isValid ? empCode : null,
+      niLiable: true,
+    },
+  ];
+
+  if (input.militaryPension > 0) {
+    sources.push({
+      label: 'military',
+      amount: input.militaryPension,
+      code: milCode && milCode.isValid ? milCode : null,
+      niLiable: false,
+    });
+  }
+
+  return sources;
+}
+
+function synthesizeDefaultCode(personalAllowance: number, region: TaxRegion): TaxCodeInfo {
+  return {
+    raw: '',
+    type: 'cumulative',
+    personalAllowance,
+    kAdjustment: 0,
+    isScottish: region === 'scottish',
+    isValid: true,
+  };
+}
+
+/**
+ * Split a combined band-level breakdown across ordered income sources.
+ * Earlier sources fill each band first; later sources fill the remainder.
+ * Used when no per-source tax codes apply and we run a single combined calc.
+ */
+function splitBreakdownAcrossSources(
+  combined: TaxBreakdownBand[],
+  sourceAmounts: number[],
+): TaxBreakdownBand[][] {
+  const perSource: TaxBreakdownBand[][] = sourceAmounts.map(() => []);
+  const remaining = [...sourceAmounts];
+
+  for (const band of combined) {
+    let bandLeft = band.taxableInBand;
+    for (let i = 0; i < remaining.length && bandLeft > 0; i++) {
+      const take = Math.min(bandLeft, remaining[i]);
+      if (take > 0) {
+        perSource[i].push({
+          name: band.name,
+          taxableInBand: take,
+          rate: band.rate,
+          tax: take * band.rate,
+        });
+        remaining[i] -= take;
+        bandLeft -= take;
+      }
+    }
+  }
+
+  return perSource;
+}
+
 export function calculate(input: CalculationInput): CalculationResult {
   const {
     annualSalary,
@@ -400,91 +486,62 @@ export function calculate(input: CalculationInput): CalculationResult {
     militaryPension,
     postTaxDeductions,
     taxRegion,
-    employmentTaxCode,
-    militaryPensionTaxCode,
   } = input;
 
-  // Parse tax codes
-  const empCode = employmentTaxCode ? parseTaxCode(employmentTaxCode) : null;
-  const milCode = militaryPensionTaxCode ? parseTaxCode(militaryPensionTaxCode) : null;
-  const useEmpCode = empCode !== null && empCode.isValid;
-  const useMilCode = milCode !== null && milCode.isValid && militaryPension > 0;
-  const usingTaxCodes = useEmpCode || useMilCode;
-
-  // Salary sacrifice reduces gross pay before tax and NI
   const totalSalarySacrifice = salarySacrifice + pensionContribution;
   const taxableEmploymentIncome = Math.max(0, annualSalary - totalSalarySacrifice);
-
-  // Total taxable income (for display)
   const totalTaxableIncome = taxableEmploymentIncome + militaryPension;
 
-  let personalAllowance: number;
-  let incomeTax: number;
-  let taxBreakdown: TaxBreakdownBand[];
-  let employmentIncomeTax: number;
-  let militaryPensionTax: number;
-  let employmentTaxBreakdown: TaxBreakdownBand[];
-  let militaryTaxBreakdown: TaxBreakdownBand[];
+  const sources = buildSources(input);
+  const usingTaxCodes = sources.some((s) => s.code !== null);
+
+  // Personal allowance is tapered against total taxable income.
+  const personalAllowance = calculatePersonalAllowance(totalTaxableIncome);
+
+  // --- Income tax: per-source calculation ---
+  let employmentIncomeTax = 0;
+  let militaryPensionTax = 0;
+  let employmentTaxBreakdown: TaxBreakdownBand[] = [];
+  let militaryTaxBreakdown: TaxBreakdownBand[] = [];
 
   if (usingTaxCodes) {
-    // --- Tax code mode: calculate each income source independently ---
-
-    // Employment income
-    if (useEmpCode) {
-      const empResult = calculateTaxWithCode(taxableEmploymentIncome, empCode, taxRegion);
-      employmentIncomeTax = empResult.total;
-      employmentTaxBreakdown = empResult.breakdown;
-      personalAllowance = empCode.type === 'cumulative' ? empCode.personalAllowance : 0;
-    } else {
-      // No employment tax code — use default with combined PA logic
-      personalAllowance = calculatePersonalAllowance(totalTaxableIncome);
-      const empResult = calculateIncomeTax(taxableEmploymentIncome, taxRegion, personalAllowance);
-      employmentIncomeTax = empResult.total;
-      employmentTaxBreakdown = empResult.breakdown;
+    // Per-source: each source uses its own code (or a default if none supplied).
+    for (const src of sources) {
+      const code = src.code ?? synthesizeDefaultCode(personalAllowance, taxRegion);
+      const { total, breakdown } = calculateTaxWithCode(src.amount, code, taxRegion);
+      if (src.label === 'employment') {
+        employmentIncomeTax = total;
+        employmentTaxBreakdown = breakdown;
+      } else {
+        militaryPensionTax = total;
+        militaryTaxBreakdown = breakdown;
+      }
     }
-
-    // Military pension
-    if (useMilCode) {
-      const milResult = calculateTaxWithCode(militaryPension, milCode, taxRegion);
-      militaryPensionTax = milResult.total;
-      militaryTaxBreakdown = milResult.breakdown;
-    } else if (militaryPension > 0) {
-      // No military tax code but has pension — tax at marginal rates above employment
-      const totalResult = calculateIncomeTax(totalTaxableIncome, taxRegion, personalAllowance);
-      militaryPensionTax = totalResult.total - employmentIncomeTax;
-      militaryTaxBreakdown = [{ name: 'Marginal Rate', taxableInBand: militaryPension, rate: militaryPensionTax / militaryPension, tax: militaryPensionTax }];
-    } else {
-      militaryPensionTax = 0;
-      militaryTaxBreakdown = [];
-    }
-
-    incomeTax = employmentIncomeTax + militaryPensionTax;
-    // Combined breakdown for the summary
-    taxBreakdown = [
-      ...employmentTaxBreakdown.map((b) => ({ ...b, name: `Employment: ${b.name}` })),
-      ...militaryTaxBreakdown.map((b) => ({ ...b, name: `Military: ${b.name}` })),
-    ];
-
   } else {
-    // --- Default mode (no tax codes): combined calculation ---
-    personalAllowance = calculatePersonalAllowance(totalTaxableIncome);
+    // Combined: one pass across all sources, split the breakdown band-by-band.
+    const combined = calculateIncomeTax(totalTaxableIncome, taxRegion, personalAllowance);
+    const sourceAmounts = sources.map((s) => s.amount);
+    const perSource = splitBreakdownAcrossSources(combined.breakdown, sourceAmounts);
 
-    const totalResult = calculateIncomeTax(totalTaxableIncome, taxRegion, personalAllowance);
-    incomeTax = totalResult.total;
-    taxBreakdown = totalResult.breakdown;
-
-    const empResult = calculateIncomeTax(taxableEmploymentIncome, taxRegion, personalAllowance);
-    employmentIncomeTax = empResult.total;
-    employmentTaxBreakdown = empResult.breakdown;
-    militaryPensionTax = incomeTax - employmentIncomeTax;
-    militaryTaxBreakdown = militaryPension > 0
-      ? [{ name: 'Marginal Rate', taxableInBand: militaryPension, rate: militaryPensionTax / militaryPension, tax: militaryPensionTax }]
-      : [];
+    const empIdx = sources.findIndex((s) => s.label === 'employment');
+    const milIdx = sources.findIndex((s) => s.label === 'military');
+    employmentTaxBreakdown = empIdx >= 0 ? perSource[empIdx] : [];
+    militaryTaxBreakdown = milIdx >= 0 ? perSource[milIdx] : [];
+    employmentIncomeTax = employmentTaxBreakdown.reduce((s, b) => s + b.tax, 0);
+    militaryPensionTax = militaryTaxBreakdown.reduce((s, b) => s + b.tax, 0);
   }
 
-  // NI only on employment income (NOT military pension, unaffected by tax codes)
-  const { total: nationalInsurance, breakdown: niBreakdown } =
-    calculateNI(taxableEmploymentIncome);
+  const incomeTax = employmentIncomeTax + militaryPensionTax;
+  const taxBreakdown: TaxBreakdownBand[] = militaryPension > 0
+    ? [
+        ...employmentTaxBreakdown.map((b) => ({ ...b, name: `Employment: ${b.name}` })),
+        ...militaryTaxBreakdown.map((b) => ({ ...b, name: `Military: ${b.name}` })),
+      ]
+    : [...employmentTaxBreakdown];
+
+  // NI on NI-liable sources only.
+  const niIncome = sources.filter((s) => s.niLiable).reduce((sum, s) => sum + s.amount, 0);
+  const { total: nationalInsurance, breakdown: niBreakdown } = calculateNI(niIncome);
 
   // Post-tax deductions
   const totalPostTaxDeductions = postTaxDeductions.reduce(
@@ -532,8 +589,8 @@ export function calculate(input: CalculationInput): CalculationResult {
     postTaxDeductions,
     totalPostTaxDeductions,
 
-    employmentTaxCodeInfo: useEmpCode ? empCode : null,
-    militaryTaxCodeInfo: useMilCode ? milCode : null,
+    employmentTaxCodeInfo: sources.find((s) => s.label === 'employment')?.code ?? null,
+    militaryTaxCodeInfo: sources.find((s) => s.label === 'military')?.code ?? null,
     usingTaxCodes,
 
     grossMonthlySalary: annualSalary / 12,
