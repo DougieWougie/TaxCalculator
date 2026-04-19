@@ -22,6 +22,10 @@ import { BarRow } from './components/BarRow';
 import { PeriodToggle } from './components/PeriodToggle';
 import { SliderSpinner } from './components/SliderSpinner';
 import { ScenarioComparison } from './components/ScenarioComparison';
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
+import { DisclaimerBanner } from './components/DisclaimerBanner';
+import { ThemeToggle } from './components/ThemeToggle';
 
 export default function App() {
   const { isDark, toggle } = useTheme();
@@ -201,46 +205,12 @@ export default function App() {
     <>
       <div className="bg-pattern" />
 
-      {showDisclaimer && (
-        <div className="disclaimer-banner" role="alert">
-          <div className="disclaimer-content">
-            <span className="disclaimer-icon" aria-hidden="true">&#9888;</span>
-            <p>
-              <strong>Disclaimer:</strong> This application was developed using AI for AI research purposes.
-              It should only be used as a guide. All AI-generated output should be independently verified.
-            </p>
-            <button
-              className="disclaimer-dismiss"
-              onClick={dismissDisclaimer}
-              aria-label="Dismiss disclaimer"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
+      {showDisclaimer && <DisclaimerBanner onDismiss={dismissDisclaimer} />}
 
-      <div className="theme-toggle-wrapper">
-        <button
-          className="theme-toggle"
-          onClick={toggle}
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          <span className="theme-toggle-icon sun" aria-hidden="true">&#9728;</span>
-          <span className="theme-toggle-icon moon" aria-hidden="true">&#9790;</span>
-        </button>
-      </div>
+      <ThemeToggle isDark={isDark} onToggle={toggle} />
 
       <div className="app-container">
-        <header className="header">
-          <h1>UK Pension &amp; Salary Calculator</h1>
-          <p>See exactly what you take home after tax, NI, and pension contributions</p>
-          <div className="tax-year-badge">Tax Year 2025 &ndash; 26</div>
-        </header>
+        <Header />
 
         <div className="main-grid">
           {/* LEFT: Inputs */}
@@ -1090,25 +1060,7 @@ export default function App() {
           </div>
         </div>
 
-        <footer className="footer">
-          <p>
-            Tax Year 2025&ndash;26 rates. This calculator is for guidance only and does not constitute financial advice.
-          </p>
-          <p style={{ marginTop: '0.5rem' }}>
-            Sources:{' '}
-            <a href="https://www.gov.scot/publications/scottish-income-tax-rates-and-bands/" target="_blank" rel="noopener noreferrer">
-              Scottish Gov
-            </a>
-            {' '}&middot;{' '}
-            <a href="https://www.gov.uk/income-tax-rates" target="_blank" rel="noopener noreferrer">
-              HMRC
-            </a>
-            {' '}&middot;{' '}
-            <a href="https://www.gov.uk/national-insurance-rates-letters" target="_blank" rel="noopener noreferrer">
-              NI Rates
-            </a>
-          </p>
-        </footer>
+        <Footer />
       </div>
     </>
   );
