@@ -218,8 +218,6 @@ export interface CalculationResult {
   totalSalarySacrifice: number;
   pensionContribution: number;
   otherSalarySacrifice: number;
-  monthlyPensionContribution: number;
-  monthlyOtherSalarySacrifice: number;
   taxableEmploymentIncome: number;
   militaryPension: number;
   totalTaxableIncome: number;
@@ -243,16 +241,6 @@ export interface CalculationResult {
   employmentTaxCodeInfo: TaxCodeInfo | null;
   militaryTaxCodeInfo: TaxCodeInfo | null;
   usingTaxCodes: boolean;
-
-  // Monthly figures
-  grossMonthlySalary: number;
-  monthlyTakeHome: number;
-  monthlyTax: number;
-  monthlyNI: number;
-  monthlySalarySacrifice: number;
-  monthlyMilitaryPension: number;
-  monthlyPostTaxDeductions: number;
-  monthlyEmployerPension: number;
 
   // Breakdowns
   taxBreakdown: TaxBreakdownBand[];
@@ -578,8 +566,6 @@ export function calculate(input: CalculationInput): CalculationResult {
     totalSalarySacrifice,
     pensionContribution,
     otherSalarySacrifice: salarySacrifice,
-    monthlyPensionContribution: pensionContribution / 12,
-    monthlyOtherSalarySacrifice: salarySacrifice / 12,
     taxableEmploymentIncome,
     militaryPension,
     totalTaxableIncome,
@@ -600,15 +586,6 @@ export function calculate(input: CalculationInput): CalculationResult {
     employmentTaxCodeInfo: sources.find((s) => s.label === 'employment')?.code ?? null,
     militaryTaxCodeInfo: sources.find((s) => s.label === 'military')?.code ?? null,
     usingTaxCodes,
-
-    grossMonthlySalary: annualSalary / 12,
-    monthlyTakeHome: netAnnualIncome / 12,
-    monthlyTax: incomeTax / 12,
-    monthlyNI: nationalInsurance / 12,
-    monthlySalarySacrifice: totalSalarySacrifice / 12,
-    monthlyMilitaryPension: militaryPension / 12,
-    monthlyPostTaxDeductions: totalPostTaxDeductions / 12,
-    monthlyEmployerPension: employerPension / 12,
 
     taxBreakdown,
     niBreakdown,
@@ -632,7 +609,6 @@ export interface ScenarioDiff {
   salarySacrifice: number;
   incomeTax: number;
   nationalInsurance: number;
-  monthlyTakeHome: number;
   netAnnualIncome: number;
   effectiveTaxRate: number;
   marginalTaxRate: number;
@@ -720,7 +696,6 @@ export function diffResults(
     salarySacrifice: b.otherSalarySacrifice - a.otherSalarySacrifice,
     incomeTax: b.incomeTax - a.incomeTax,
     nationalInsurance: b.nationalInsurance - a.nationalInsurance,
-    monthlyTakeHome: b.monthlyTakeHome - a.monthlyTakeHome,
     netAnnualIncome: b.netAnnualIncome - a.netAnnualIncome,
     effectiveTaxRate: b.effectiveTaxRate - a.effectiveTaxRate,
     marginalTaxRate: b.marginalTaxRate - a.marginalTaxRate,

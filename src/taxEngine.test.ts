@@ -294,7 +294,6 @@ describe('diffResults', () => {
     expect(diff.grossSalary).toBe(5_000);
     expect(diff.incomeTax).toBe(resultB.incomeTax - resultA.incomeTax);
     expect(diff.nationalInsurance).toBe(resultB.nationalInsurance - resultA.nationalInsurance);
-    expect(diff.monthlyTakeHome).toBe(resultB.monthlyTakeHome - resultA.monthlyTakeHome);
     expect(diff.netAnnualIncome).toBe(resultB.netAnnualIncome - resultA.netAnnualIncome);
   });
 
@@ -306,7 +305,6 @@ describe('diffResults', () => {
     expect(diff.grossSalary).toBe(0);
     expect(diff.incomeTax).toBe(0);
     expect(diff.nationalInsurance).toBe(0);
-    expect(diff.monthlyTakeHome).toBe(0);
     expect(diff.netAnnualIncome).toBe(0);
     expect(diff.effectiveTaxRate).toBe(0);
     expect(diff.totalPensionPot).toBe(0);
@@ -321,7 +319,6 @@ describe('diffResults', () => {
 
     expect(diff.grossSalary).toBeLessThan(0);
     expect(diff.netAnnualIncome).toBeLessThan(0);
-    expect(diff.monthlyTakeHome).toBeLessThan(0);
   });
 
   it('handles pension optimisation scenario', () => {
