@@ -20,12 +20,15 @@ import { useTheme } from './hooks/useTheme';
 import { useNumericInput } from './hooks/useNumericInput';
 import { BarRow } from './components/BarRow';
 import { PeriodToggle } from './components/PeriodToggle';
-import { SliderSpinner } from './components/SliderSpinner';
 import { ScenarioComparison } from './components/ScenarioComparison';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { DisclaimerBanner } from './components/DisclaimerBanner';
 import { ThemeToggle } from './components/ThemeToggle';
+import { RegionCard } from './components/RegionCard';
+import { IncomeCard } from './components/IncomeCard';
+import { MilitaryPensionCard } from './components/MilitaryPensionCard';
+import { PostTaxDeductionsCard } from './components/PostTaxDeductionsCard';
 
 export default function App() {
   const { isDark, toggle } = useTheme();
@@ -80,6 +83,15 @@ export default function App() {
     },
     [annualSalary]
   );
+
+  const handleEmployerPensionChange = useCallback((value: string) => {
+    setEmployerPension(value);
+    setEmployerPensionPct(0);
+  }, []);
+
+  const handlePensionTyped = useCallback(() => {
+    setPensionPct(0);
+  }, []);
 
   // Recalc employer pension when salary changes (if using slider)
   useEffect(() => {
@@ -215,401 +227,42 @@ export default function App() {
         <div className="main-grid">
           {/* LEFT: Inputs */}
           <div className="input-column">
-            {/* Tax Region */}
-            <div className="card" style={{ animationDelay: '0.05s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#127988;</span>
-                Tax Region
-              </div>
-              <div className="region-toggle">
-                <button
-                  className={`region-btn scottish ${taxRegion === 'scottish' ? 'active' : ''}`}
-                  onClick={() => setTaxRegion('scottish')}
-                >
-                  &#127988;&#917607;&#917602;&#917619;&#917603;&#917620;&#917631; Scotland
-                </button>
-                <button
-                  className={`region-btn english ${taxRegion === 'english' ? 'active' : ''}`}
-                  onClick={() => setTaxRegion('english')}
-                >
-                  &#127468;&#127463; England / Wales / NI
-                </button>
-              </div>
-              <div className="rates-info" style={{ marginTop: '1rem' }} aria-live="polite">
-                <span aria-hidden="true">&#9432;</span>
-                <div>
-                  {taxRegion === 'scottish'
-                    ? 'Scotland has 6 income tax bands (19%\u201348%). Your tax code starts with "S".'
-                    : 'England, Wales & NI use 3 income tax bands (20%\u201345%).'}
-                </div>
-              </div>
-            </div>
+            <RegionCard taxRegion={taxRegion} onChange={setTaxRegion} />
 
-            {/* Income */}
-            <div className="card" style={{ animationDelay: '0.1s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#128176;</span>
-                Employment Income
-              </div>
+            <IncomeCard
+              annualSalary={annualSalary}
+              onAnnualSalaryChange={setAnnualSalary}
+              salarySacrifice={salarySacrificeInput}
+              pensionContribution={pensionContributionInput}
+              pensionPct={pensionPct}
+              onPensionPctChange={handlePensionPctChange}
+              onPensionTyped={handlePensionTyped}
+              employerPension={employerPension}
+              onEmployerPensionChange={handleEmployerPensionChange}
+              employerPensionPct={employerPensionPct}
+              onEmployerPensionPctChange={handleEmployerPensionPctChange}
+              employmentTaxCode={employmentTaxCode}
+              onEmploymentTaxCodeChange={setEmploymentTaxCode}
+              empTaxCodeInfo={empTaxCodeInfo}
+              taxRegion={taxRegion}
+            />
 
-              <div className="input-group">
-                <label className="input-label" htmlFor="salary">Annual Gross Salary</label>
-                <div className="input-wrapper">
-                  <span className="input-prefix">&pound;</span>
-                  <input
-                    id="salary"
-                    className="input-field"
-                    type="text"
-                    inputMode="decimal"
-                    value={annualSalary}
-                    onChange={(e) => setAnnualSalary(e.target.value)}
-                    placeholder="45000"
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
+            <MilitaryPensionCard
+              hasMilitaryPension={hasMilitaryPension}
+              onHasMilitaryPensionChange={setHasMilitaryPension}
+              militaryPension={militaryPension}
+              onMilitaryPensionChange={setMilitaryPension}
+              militaryPensionTaxCode={militaryPensionTaxCode}
+              onMilitaryPensionTaxCodeChange={setMilitaryPensionTaxCode}
+              milTaxCodeInfo={milTaxCodeInfo}
+            />
 
-              <div className="input-group">
-                <div className="input-label-row">
-                  <label className="input-label" htmlFor="sacrifice">
-                    Pre-Tax Salary Sacrifice (excl. pension)
-                  </label>
-                  <PeriodToggle
-                    isMonthly={salarySacrificeInput.isMonthly}
-                    onChange={salarySacrificeInput.setIsMonthly}
-                  />
-                </div>
-                <div className="input-wrapper">
-                  <span className="input-prefix">&pound;</span>
-                  <input
-                    id="sacrifice"
-                    className="input-field"
-                    type="text"
-                    inputMode="decimal"
-                    value={salarySacrificeInput.displayValue}
-                    onChange={(e) => salarySacrificeInput.setDisplay(e.target.value)}
-                    placeholder={salarySacrificeInput.isMonthly ? 'e.g. 200' : 'e.g. 2400'}
-                    autoComplete="off"
-                  />
-                </div>
-                <p className="input-hint">
-                  E.g. cycle-to-work, childcare vouchers — enter{' '}
-                  {salarySacrificeInput.isMonthly ? 'monthly' : 'annual'} amount
-                </p>
-              </div>
-
-              <div className="input-group">
-                <div className="input-label-row">
-                  <label className="input-label" htmlFor="pension">
-                    Pension Contribution (salary sacrifice)
-                  </label>
-                  <PeriodToggle
-                    isMonthly={pensionContributionInput.isMonthly}
-                    onChange={pensionContributionInput.setIsMonthly}
-                  />
-                </div>
-                <div className="input-wrapper">
-                  <span className="input-prefix">&pound;</span>
-                  <input
-                    id="pension"
-                    className="input-field"
-                    type="text"
-                    inputMode="decimal"
-                    value={pensionContributionInput.displayValue}
-                    onChange={(e) => {
-                      pensionContributionInput.setDisplay(e.target.value);
-                      setPensionPct(0); // detach slider when typing
-                    }}
-                    placeholder={pensionContributionInput.isMonthly ? 'e.g. 683' : 'e.g. 8200'}
-                    autoComplete="off"
-                  />
-                </div>
-                <SliderSpinner
-                  value={pensionPct}
-                  min={0}
-                  max={40}
-                  step={0.5}
-                  onChange={handlePensionPctChange}
-                  ariaLabel="Pension contribution percentage"
-                />
-                <p className="input-hint">
-                  Drag the slider to set as % of gross salary, or enter{' '}
-                  {pensionContributionInput.isMonthly ? 'monthly' : 'annual'} amount above
-                </p>
-              </div>
-
-              <div className="input-group">
-                <label className="input-label" htmlFor="employer-pension">
-                  Employer Pension Contribution
-                </label>
-                <div className="input-wrapper">
-                  <span className="input-prefix">&pound;</span>
-                  <input
-                    id="employer-pension"
-                    className="input-field"
-                    type="text"
-                    inputMode="decimal"
-                    value={employerPension}
-                    onChange={(e) => {
-                      setEmployerPension(e.target.value);
-                      setEmployerPensionPct(0); // detach slider
-                    }}
-                    placeholder="0"
-                    autoComplete="off"
-                  />
-                </div>
-                <SliderSpinner
-                  value={employerPensionPct}
-                  min={0}
-                  max={30}
-                  step={0.5}
-                  onChange={handleEmployerPensionPctChange}
-                  ariaLabel="Employer pension contribution percentage"
-                />
-                <p className="input-hint">
-                  Paid by your employer on top of your salary &mdash; does not reduce your take-home pay
-                </p>
-              </div>
-
-              <div className="input-group">
-                <label className="input-label" htmlFor="emp-tax-code">
-                  Tax Code (optional)
-                </label>
-                <div className="input-wrapper tax-code-wrapper">
-                  <input
-                    id="emp-tax-code"
-                    className={`input-field tax-code-input ${employmentTaxCode && empTaxCodeInfo && !empTaxCodeInfo.isValid ? 'invalid' : ''} ${employmentTaxCode && empTaxCodeInfo?.isValid ? 'valid' : ''}`}
-                    type="text"
-                    value={employmentTaxCode}
-                    onChange={(e) => setEmploymentTaxCode(e.target.value.toUpperCase())}
-                    placeholder="e.g. 1257L"
-                    autoComplete="off"
-                    maxLength={10}
-                  />
-                  {employmentTaxCode && empTaxCodeInfo && (
-                    <span className={`tax-code-status ${empTaxCodeInfo.isValid ? 'valid' : 'invalid'}`}>
-                      {empTaxCodeInfo.isValid ? '\u2713' : '\u2717'}
-                    </span>
-                  )}
-                </div>
-                {employmentTaxCode && empTaxCodeInfo?.isValid && (
-                  <p className="input-hint tax-code-hint valid">
-                    {empTaxCodeInfo.isScottish ? 'Scottish ' : ''}
-                    {empTaxCodeInfo.type === 'cumulative' && `Personal allowance: ${formatCurrency(empTaxCodeInfo.personalAllowance)}`}
-                    {empTaxCodeInfo.type === 'K' && `K code: adds ${formatCurrency(empTaxCodeInfo.kAdjustment)} to taxable income`}
-                    {empTaxCodeInfo.type === 'NT' && 'No tax deducted'}
-                    {empTaxCodeInfo.type === '0T' && 'Zero personal allowance'}
-                    {(empTaxCodeInfo.type === 'BR' || empTaxCodeInfo.type === 'D0' || empTaxCodeInfo.type === 'D1' || empTaxCodeInfo.type === 'D2' || empTaxCodeInfo.type === 'D3') && `Flat rate: ${empTaxCodeInfo.type}`}
-                  </p>
-                )}
-                {employmentTaxCode && empTaxCodeInfo && !empTaxCodeInfo.isValid && (
-                  <p className="input-hint tax-code-hint invalid">
-                    Invalid tax code. Examples: 1257L, S1257L, BR, K100, 0T, NT
-                  </p>
-                )}
-                {!employmentTaxCode && (
-                  <p className="input-hint">
-                    Leave blank to use standard {taxRegion === 'scottish' ? 'Scottish' : 'English'} rates with calculated personal allowance
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Military Pension */}
-            <div className="card" style={{ animationDelay: '0.15s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#127894;</span>
-                Military Pension
-              </div>
-
-              <div
-                className={`checkbox-group ${hasMilitaryPension ? 'checked' : ''}`}
-                onClick={() => setHasMilitaryPension((v) => !v)}
-                role="checkbox"
-                aria-checked={hasMilitaryPension}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === ' ' || e.key === 'Enter') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setHasMilitaryPension((v) => !v);
-                  }
-                }}
-              >
-                <div className="custom-checkbox">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <span className="checkbox-label">I receive a military pension</span>
-              </div>
-
-              {hasMilitaryPension && (
-                <>
-                  <div className="input-group" style={{ marginTop: '1rem' }}>
-                    <label className="input-label" htmlFor="military">
-                      Annual Military Pension
-                    </label>
-                    <div className="input-wrapper">
-                      <span className="input-prefix">&pound;</span>
-                      <input
-                        id="military"
-                        className="input-field"
-                        type="text"
-                        inputMode="decimal"
-                        value={militaryPension}
-                        onChange={(e) => setMilitaryPension(e.target.value)}
-                        placeholder="0"
-                        autoComplete="off"
-                      />
-                    </div>
-                    <p className="input-hint">
-                      Military pensions are subject to income tax but <strong>not</strong> National Insurance contributions
-                    </p>
-                  </div>
-
-                  <div className="input-group">
-                    <label className="input-label" htmlFor="mil-tax-code">
-                      Military Pension Tax Code (optional)
-                    </label>
-                    <div className="input-wrapper tax-code-wrapper">
-                      <input
-                        id="mil-tax-code"
-                        className={`input-field tax-code-input ${militaryPensionTaxCode && milTaxCodeInfo && !milTaxCodeInfo.isValid ? 'invalid' : ''} ${militaryPensionTaxCode && milTaxCodeInfo?.isValid ? 'valid' : ''}`}
-                        type="text"
-                        value={militaryPensionTaxCode}
-                        onChange={(e) => setMilitaryPensionTaxCode(e.target.value.toUpperCase())}
-                        placeholder="e.g. BR"
-                        autoComplete="off"
-                        maxLength={10}
-                      />
-                      {militaryPensionTaxCode && milTaxCodeInfo && (
-                        <span className={`tax-code-status ${milTaxCodeInfo.isValid ? 'valid' : 'invalid'}`}>
-                          {milTaxCodeInfo.isValid ? '\u2713' : '\u2717'}
-                        </span>
-                      )}
-                    </div>
-                    {militaryPensionTaxCode && milTaxCodeInfo?.isValid && (
-                      <p className="input-hint tax-code-hint valid">
-                        {milTaxCodeInfo.isScottish ? 'Scottish ' : ''}
-                        {milTaxCodeInfo.type === 'cumulative' && `Personal allowance: ${formatCurrency(milTaxCodeInfo.personalAllowance)}`}
-                        {milTaxCodeInfo.type === 'K' && `K code: adds ${formatCurrency(milTaxCodeInfo.kAdjustment)} to taxable income`}
-                        {milTaxCodeInfo.type === 'NT' && 'No tax deducted'}
-                        {milTaxCodeInfo.type === '0T' && 'Zero personal allowance'}
-                        {(milTaxCodeInfo.type === 'BR' || milTaxCodeInfo.type === 'D0' || milTaxCodeInfo.type === 'D1' || milTaxCodeInfo.type === 'D2' || milTaxCodeInfo.type === 'D3') && `Flat rate: ${milTaxCodeInfo.type}`}
-                      </p>
-                    )}
-                    {militaryPensionTaxCode && milTaxCodeInfo && !milTaxCodeInfo.isValid && (
-                      <p className="input-hint tax-code-hint invalid">
-                        Invalid tax code. Examples: 1257L, BR, D0, NT
-                      </p>
-                    )}
-                    {!militaryPensionTaxCode && (
-                      <p className="input-hint">
-                        Leave blank to calculate tax at marginal rates
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Post-Tax Deductions */}
-            <div className="card" style={{ animationDelay: '0.2s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#128181;</span>
-                Post-Tax Deductions
-              </div>
-              <p className="input-hint" style={{ marginBottom: '0.75rem' }}>
-                Deducted from net pay after tax and NI. Enter annual or monthly — use the toggle per row. E.g. Share Save (SAYE), Give As You Earn, union dues.
-              </p>
-
-              {postTaxDeductions.map((deduction) => (
-                <div key={deduction.id} className="deduction-row">
-                  <input
-                    className="input-field deduction-name"
-                    type="text"
-                    value={deduction.name}
-                    onChange={(e) =>
-                      setPostTaxDeductions((prev) =>
-                        prev.map((d) => d.id === deduction.id ? { ...d, name: e.target.value } : d)
-                      )
-                    }
-                    placeholder="Name"
-                    autoComplete="off"
-                  />
-                  <div className="input-wrapper deduction-amount-wrapper">
-                    <span className="input-prefix">&pound;</span>
-                    <input
-                      className="input-field deduction-amount"
-                      type="text"
-                      inputMode="decimal"
-                      value={deduction.isMonthly ? deduction.monthlyInput : deduction.amount}
-                      onChange={(e) => {
-                        if (deduction.isMonthly) {
-                          setPostTaxDeductions((prev) =>
-                            prev.map((d) => d.id === deduction.id
-                              ? { ...d, monthlyInput: e.target.value, amount: (sanitizeNumber(e.target.value) * 12).toString() }
-                              : d
-                            )
-                          );
-                        } else {
-                          setPostTaxDeductions((prev) =>
-                            prev.map((d) => d.id === deduction.id ? { ...d, amount: e.target.value } : d)
-                          );
-                        }
-                      }}
-                      placeholder={deduction.isMonthly ? 'e.g. 200' : 'e.g. 2400'}
-                      autoComplete="off"
-                    />
-                  </div>
-                  <PeriodToggle
-                    isMonthly={deduction.isMonthly}
-                    onChange={(isMonthly) =>
-                      setPostTaxDeductions((prev) =>
-                        prev.map((d) => {
-                          if (d.id !== deduction.id) return d;
-                          const monthlyInput = isMonthly
-                            ? (sanitizeNumber(d.amount) / 12).toFixed(2)
-                            : d.monthlyInput;
-                          return { ...d, isMonthly, monthlyInput };
-                        })
-                      )
-                    }
-                  />
-                  <button
-                    className="deduction-remove"
-                    onClick={() =>
-                      setPostTaxDeductions((prev) => prev.filter((d) => d.id !== deduction.id))
-                    }
-                    aria-label={`Remove ${deduction.name || 'deduction'}`}
-                    title="Remove"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-
-              <button
-                className="add-deduction-btn"
-                onClick={() => {
-                  setPostTaxDeductions((prev) => [
-                    ...prev,
-                    { id: nextDeductionId, name: '', amount: '0', isMonthly: false, monthlyInput: '0' },
-                  ]);
-                  setNextDeductionId((id) => id + 1);
-                }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add deduction
-              </button>
-            </div>
+            <PostTaxDeductionsCard
+              postTaxDeductions={postTaxDeductions}
+              setPostTaxDeductions={setPostTaxDeductions}
+              nextDeductionId={nextDeductionId}
+              setNextDeductionId={setNextDeductionId}
+            />
           </div>
 
           {/* RIGHT: Results */}
