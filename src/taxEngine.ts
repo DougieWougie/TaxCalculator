@@ -181,7 +181,9 @@ function calculateTaxWithCode(
     return { total: tax, breakdown: [{ name: label, taxableInBand: income, rate, tax }] };
   }
 
-  // K code: add kAdjustment to taxable income, no PA
+  // K code: add kAdjustment to taxable income, no PA.
+  // NOTE: HMRC caps K-code tax at 50% of pay in the relevant period (weekly/monthly).
+  // This annual calculator does not implement the cap — accept it as a documented gap.
   if (code.type === 'K') {
     const adjustedIncome = income + code.kAdjustment;
     return calculateIncomeTax(adjustedIncome, effectiveRegion, 0);
