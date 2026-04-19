@@ -267,9 +267,8 @@ export interface CalculationResult {
 export const BASE_PERSONAL_ALLOWANCE = 12_570;
 export const PA_TAPER_THRESHOLD = 100_000;
 
-// Scottish Income Tax Bands 2025-26
+// Scottish Income Tax Bands 2025-26 (excludes Personal Allowance — that's a threshold, not a band)
 export const SCOTTISH_TAX_BANDS: TaxBand[] = [
-  { name: 'Personal Allowance', threshold: 0,       upperBound: 12_570,   rate: 0    },
   { name: 'Starter Rate',       threshold: 12_570,  upperBound: 15_397,   rate: 0.19 },
   { name: 'Basic Rate',         threshold: 15_397,  upperBound: 27_491,   rate: 0.20 },
   { name: 'Intermediate Rate',  threshold: 27_491,  upperBound: 43_662,   rate: 0.21 },
@@ -278,9 +277,8 @@ export const SCOTTISH_TAX_BANDS: TaxBand[] = [
   { name: 'Top Rate',           threshold: 125_140, upperBound: Infinity, rate: 0.48 },
 ];
 
-// English/Welsh/NI Income Tax Bands 2025-26
+// English/Welsh/NI Income Tax Bands 2025-26 (excludes Personal Allowance)
 export const ENGLISH_TAX_BANDS: TaxBand[] = [
-  { name: 'Personal Allowance', threshold: 0,       upperBound: 12_570,   rate: 0    },
   { name: 'Basic Rate',         threshold: 12_570,  upperBound: 50_270,   rate: 0.20 },
   { name: 'Higher Rate',        threshold: 50_270,  upperBound: 125_140,  rate: 0.40 },
   { name: 'Additional Rate',    threshold: 125_140, upperBound: Infinity, rate: 0.45 },
@@ -302,14 +300,14 @@ function calculatePersonalAllowance(totalIncome: number): number {
   return Math.max(0, BASE_PERSONAL_ALLOWANCE - reduction);
 }
 
-function adjustBandsForPersonalAllowance(
-  bands: TaxBand[],
-  personalAllowance: number
-): TaxBand[] {
-  return bands.map((band) => {
-    if (band.name === 'Personal Allowance') {
-      return { ...band, upperBound: personalAllowance };
-    }
+/**
+ * Build the effective tax bands for a given region and personal allowance.
+ * Shifts the first band's threshold to match the supplied PA (tapered or full).
+ * Returns a new array; does not mutate the exported band constants.
+ */
+function buildTaxBands(region: TaxRegion, personalAllowance: number): TaxBand[] {
+  const base = region === 'scottish' ? SCOTTISH_TAX_BANDS : ENGLISH_TAX_BANDS;
+  return base.map((band) => {
     if (band.threshold <= BASE_PERSONAL_ALLOWANCE) {
       return { ...band, threshold: personalAllowance };
     }
@@ -322,8 +320,9 @@ function calculateIncomeTax(
   region: TaxRegion,
   personalAllowance: number
 ): { total: number; breakdown: TaxBreakdownBand[] } {
-  const baseBands = region === 'scottish' ? SCOTTISH_TAX_BANDS : ENGLISH_TAX_BANDS;
-  const bands = adjustBandsForPersonalAllowance(baseBands, personalAllowance);
+  if (income <= personalAllowance) return { total: 0, breakdown: [] };
+
+  const bands = buildTaxBands(region, personalAllowance);
 
   let totalTax = 0;
   const breakdown: TaxBreakdownBand[] = [];
@@ -372,9 +371,8 @@ function calculateNI(
 }
 
 function getMarginalTaxRate(totalIncome: number, region: TaxRegion): number {
-  const baseBands = region === 'scottish' ? SCOTTISH_TAX_BANDS : ENGLISH_TAX_BANDS;
   const personalAllowance = calculatePersonalAllowance(totalIncome);
-  const bands = adjustBandsForPersonalAllowance(baseBands, personalAllowance);
+  const bands = buildTaxBands(region, personalAllowance);
 
   let marginalRate = 0;
   for (const band of bands) {
