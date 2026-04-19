@@ -15,6 +15,7 @@ import {
   type ScenarioDiff,
   type OptimisationTarget,
 } from './taxEngine';
+import { sanitizeNumber } from './sanitize';
 
 function useTheme() {
   const [isDark, setIsDark] = useState(() => {
@@ -30,13 +31,6 @@ function useTheme() {
   }, [isDark]);
 
   return { isDark, toggle: () => setIsDark((d) => !d) };
-}
-
-function sanitizeNumber(value: string): number {
-  const cleaned = value.replace(/[^0-9.]/g, '');
-  const parsed = parseFloat(cleaned);
-  if (Number.isNaN(parsed) || parsed < 0) return 0;
-  return Math.min(parsed, 10_000_000); // cap at £10m
 }
 
 export default function App() {
