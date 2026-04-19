@@ -17,22 +17,7 @@ import {
 } from './taxEngine';
 import { sanitizeNumber } from './sanitize';
 import { useLocalStorage } from './hooks/useLocalStorage';
-
-function useTheme() {
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const stored = localStorage.getItem('theme');
-    if (stored) return stored === 'dark';
-    return true; // dark by default
-  });
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
-
-  return { isDark, toggle: () => setIsDark((d) => !d) };
-}
+import { useTheme } from './hooks/useTheme';
 
 export default function App() {
   const { isDark, toggle } = useTheme();
