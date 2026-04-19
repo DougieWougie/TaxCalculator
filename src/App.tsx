@@ -16,6 +16,7 @@ import {
   type OptimisationTarget,
 } from './taxEngine';
 import { sanitizeNumber } from './sanitize';
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 function useTheme() {
   const [isDark, setIsDark] = useState(() => {
@@ -35,14 +36,15 @@ function useTheme() {
 
 export default function App() {
   const { isDark, toggle } = useTheme();
-  const [showDisclaimer, setShowDisclaimer] = useState(() => {
-    return localStorage.getItem('disclaimer-dismissed') !== 'true';
-  });
+  const [disclaimerDismissed, setDisclaimerDismissed] = useLocalStorage<boolean>(
+    'disclaimer-dismissed',
+    false
+  );
+  const showDisclaimer = !disclaimerDismissed;
 
   const dismissDisclaimer = useCallback(() => {
-    setShowDisclaimer(false);
-    localStorage.setItem('disclaimer-dismissed', 'true');
-  }, []);
+    setDisclaimerDismissed(true);
+  }, [setDisclaimerDismissed]);
 
   const [annualSalary, setAnnualSalary] = useState('45000');
   const [salarySacrifice, setSalarySacrifice] = useState('0');
