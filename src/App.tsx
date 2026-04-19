@@ -1,25 +1,17 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   calculate,
-  formatCurrency,
-  formatPercent,
   parseTaxCode,
-  getOptimisationTargets,
-  calculateOptimalPension,
-  diffResults,
-  scalePeriod,
   type TaxRegion,
   type CalculationInput,
   type CalculationResult,
   type PostTaxDeduction,
-  type ScenarioDiff,
 } from './taxEngine';
 import { sanitizeNumber } from './sanitize';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useTheme } from './hooks/useTheme';
 import { useNumericInput } from './hooks/useNumericInput';
-import { BarRow } from './components/BarRow';
-import { PeriodToggle } from './components/PeriodToggle';
+import { useScenario } from './hooks/useScenario';
 import { ScenarioComparison } from './components/ScenarioComparison';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -29,6 +21,15 @@ import { RegionCard } from './components/RegionCard';
 import { IncomeCard } from './components/IncomeCard';
 import { MilitaryPensionCard } from './components/MilitaryPensionCard';
 import { PostTaxDeductionsCard } from './components/PostTaxDeductionsCard';
+import { SummaryHero } from './components/SummaryHero';
+import { BaselineActions } from './components/BaselineActions';
+import { MilitarySplitStats } from './components/MilitarySplitStats';
+import { IncomeDeductionsCard } from './components/IncomeDeductionsCard';
+import { EffectiveRatesCard } from './components/EffectiveRatesCard';
+import { TaxBreakdownCard } from './components/TaxBreakdownCard';
+import { NiBreakdownCard } from './components/NiBreakdownCard';
+import { PensionSummaryCard } from './components/PensionSummaryCard';
+import { PostTaxDeductionsSummaryCard } from './components/PostTaxDeductionsSummaryCard';
 
 export default function App() {
   const { isDark, toggle } = useTheme();
@@ -60,14 +61,6 @@ export default function App() {
   const [nextDeductionId, setNextDeductionId] = useState(1);
   const [employmentTaxCode, setEmploymentTaxCode] = useState('');
   const [militaryPensionTaxCode, setMilitaryPensionTaxCode] = useState('');
-
-  // Scenario comparison
-  const [baseline, setBaseline] = useState<{
-    input: CalculationInput;
-    result: CalculationResult;
-  } | null>(null);
-  const [scenarioPreset, setScenarioPreset] = useState<string | null>(null);
-  const [scenarioInput, setScenarioInput] = useState<CalculationInput | null>(null);
 
   // Slider for pension % (convenience)
   const [pensionPct, setPensionPct] = useState(0);
@@ -155,63 +148,9 @@ export default function App() {
     [currentInput]
   );
 
-  const scenarioResult: CalculationResult | null = useMemo(
-    () => scenarioInput ? calculate(scenarioInput) : null,
-    [scenarioInput]
-  );
-
-  const scenarioDiff: ScenarioDiff | null = useMemo(
-    () => (baseline && scenarioResult) ? diffResults(baseline.result, scenarioResult) : null,
-    [baseline, scenarioResult]
-  );
+  const scenario = useScenario(currentInput, result);
 
   const totalGross = sanitizeNumber(annualSalary) + (hasMilitaryPension ? sanitizeNumber(militaryPension) : 0);
-
-  const optimisationTargets = useMemo(
-    () => baseline ? getOptimisationTargets(baseline.input, baseline.result) : [],
-    [baseline]
-  );
-
-  const handleApplyOptimise = useCallback(
-    (threshold: number) => {
-      if (!baseline) return;
-      const pension = calculateOptimalPension(baseline.input, threshold);
-      if (pension === null) return;
-      const modified: CalculationInput = {
-        ...baseline.input,
-        pensionContribution: pension,
-      };
-      setScenarioInput(modified);
-    },
-    [baseline]
-  );
-
-  const handleApplySalaryChange = useCallback(
-    (amount: number, isPercentage: boolean) => {
-      if (!baseline) return;
-      const newSalary = isPercentage
-        ? baseline.input.annualSalary * (1 + amount / 100)
-        : baseline.input.annualSalary + amount;
-      const modified: CalculationInput = {
-        ...baseline.input,
-        annualSalary: Math.max(0, newSalary),
-      };
-      setScenarioInput(modified);
-    },
-    [baseline]
-  );
-
-  const handleApplySacrifice = useCallback(
-    (amount: number) => {
-      if (!baseline) return;
-      const modified: CalculationInput = {
-        ...baseline.input,
-        salarySacrifice: Math.min(baseline.input.salarySacrifice + amount, baseline.input.annualSalary),
-      };
-      setScenarioInput(modified);
-    },
-    [baseline]
-  );
 
   return (
     <>
@@ -267,447 +206,54 @@ export default function App() {
 
           {/* RIGHT: Results */}
           <div className="results-column">
-            {/* Hero take-home */}
-            <div className="summary-hero">
-              <div className="summary-hero-label">Monthly Take-Home Pay</div>
-              <div className="summary-hero-value">{formatCurrency(scalePeriod(result.netAnnualIncome, 'monthly'))}</div>
-              <div className="summary-hero-sub">
-                {formatCurrency(result.netAnnualIncome)} per year
-              </div>
-            </div>
+            <SummaryHero netAnnualIncome={result.netAnnualIncome} />
 
-            {/* Save as Baseline */}
-            <div className="baseline-actions">
-              <button
-                className="baseline-btn"
-                onClick={() => {
-                  setBaseline({ input: currentInput, result });
-                  setScenarioPreset(null);
-                  setScenarioInput(null);
-                }}
-              >
-                {baseline ? 'Update Baseline' : 'Save as Baseline'}
-              </button>
-              {baseline && (
-                <button
-                  className="baseline-clear"
-                  onClick={() => {
-                    setBaseline(null);
-                    setScenarioPreset(null);
-                    setScenarioInput(null);
-                  }}
-                >
-                  Clear
-                </button>
-              )}
-            </div>
+            <BaselineActions
+              hasBaseline={!!scenario.baseline}
+              onSave={scenario.saveBaseline}
+              onClear={scenario.clearBaseline}
+            />
 
-            {/* Net salary / net military pension sub-tiles */}
             {hasMilitaryPension && (
-              <div className="stats-grid" style={{ marginTop: '0.75rem' }}>
-                <div className="stat-card">
-                  <div className="stat-label">Net Salary</div>
-                  <div className="stat-value">
-                    {formatCurrency(scalePeriod(result.netAnnualIncome - (result.militaryPension - result.militaryPensionTax), 'monthly'))}
-                  </div>
-                  <div className="stat-sub">per month</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Net Military Pension</div>
-                  <div className="stat-value">
-                    {formatCurrency(scalePeriod(result.militaryPension - result.militaryPensionTax, 'monthly'))}
-                  </div>
-                  <div className="stat-sub">per month</div>
-                </div>
-              </div>
+              <MilitarySplitStats
+                netAnnualIncome={result.netAnnualIncome}
+                militaryPension={result.militaryPension}
+                militaryPensionTax={result.militaryPensionTax}
+              />
             )}
 
-            {/* Stats grid */}
-            <div className="card" style={{ animationDelay: '0.15s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#128202;</span>
-                Income &amp; Deductions
-                <span className="pl-table-period-toggle">
-                  <PeriodToggle
-                    isMonthly={plTableShowMonthly}
-                    onChange={setPlTableShowMonthly}
-                    ariaLabel="Display period"
-                  />
-                </span>
-              </div>
-              <table className={`pl-table ${plTableShowMonthly ? 'hide-annual' : 'hide-monthly'}`}>
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th className="pl-col-monthly">Monthly</th>
-                    <th className="pl-col-annual">Annual</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Income section */}
-                  <tr className="section-header">
-                    <td colSpan={3}>Income</td>
-                  </tr>
-                  <tr>
-                    <td>Gross Salary</td>
-                    <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.grossSalary, 'monthly'))}</td>
-                    <td className="pl-col-annual">{formatCurrency(result.grossSalary)}</td>
-                  </tr>
-                  {hasMilitaryPension && (
-                    <tr>
-                      <td>Military Pension</td>
-                      <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.militaryPension, 'monthly'))}</td>
-                      <td className="pl-col-annual">{formatCurrency(result.militaryPension)}</td>
-                    </tr>
-                  )}
-                  <tr className="subtotal-row">
-                    <td>Total Income</td>
-                    <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.grossSalary + (hasMilitaryPension ? result.militaryPension : 0), 'monthly'))}</td>
-                    <td className="pl-col-annual">{formatCurrency(result.grossSalary + (hasMilitaryPension ? result.militaryPension : 0))}</td>
-                  </tr>
+            <IncomeDeductionsCard
+              result={result}
+              hasMilitaryPension={hasMilitaryPension}
+              showMonthly={plTableShowMonthly}
+              onShowMonthlyChange={setPlTableShowMonthly}
+              totalGross={totalGross}
+            />
 
-                  {/* Deductions section */}
-                  <tr className="section-header">
-                    <td colSpan={3}>Deductions</td>
-                  </tr>
-                  <tr>
-                    <td>Income Tax</td>
-                    <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.incomeTax, 'monthly'))}</td>
-                    <td className="pl-col-annual negative">&minus;{formatCurrency(result.incomeTax)}</td>
-                  </tr>
-                  <tr>
-                    <td>National Insurance</td>
-                    <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.nationalInsurance, 'monthly'))}</td>
-                    <td className="pl-col-annual negative">&minus;{formatCurrency(result.nationalInsurance)}</td>
-                  </tr>
-                  {result.otherSalarySacrifice > 0 && (
-                    <tr>
-                      <td>Pre-Tax Salary Sacrifice</td>
-                      <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.otherSalarySacrifice, 'monthly'))}</td>
-                      <td className="pl-col-annual negative">&minus;{formatCurrency(result.otherSalarySacrifice)}</td>
-                    </tr>
-                  )}
-                  {result.pensionContribution > 0 && (
-                    <tr>
-                      <td>Pension Contribution</td>
-                      <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.pensionContribution, 'monthly'))}</td>
-                      <td className="pl-col-annual negative">&minus;{formatCurrency(result.pensionContribution)}</td>
-                    </tr>
-                  )}
-                  {result.totalPostTaxDeductions > 0 && (
-                    <tr>
-                      <td>Post-Tax Deductions</td>
-                      <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.totalPostTaxDeductions, 'monthly'))}</td>
-                      <td className="pl-col-annual negative">&minus;{formatCurrency(result.totalPostTaxDeductions)}</td>
-                    </tr>
-                  )}
-                  <tr className="subtotal-row">
-                    <td>Total Deductions</td>
-                    <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.incomeTax + result.nationalInsurance + result.totalSalarySacrifice + result.totalPostTaxDeductions, 'monthly'))}</td>
-                    <td className="pl-col-annual negative">&minus;{formatCurrency(result.incomeTax + result.nationalInsurance + result.totalSalarySacrifice + result.totalPostTaxDeductions)}</td>
-                  </tr>
+            <EffectiveRatesCard result={result} />
 
-                  {/* Net row */}
-                  <tr className="net-row">
-                    <td>Net Take-Home</td>
-                    <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.netAnnualIncome, 'monthly'))}</td>
-                    <td className="pl-col-annual">{formatCurrency(result.netAnnualIncome)}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <TaxBreakdownCard result={result} />
 
-              {/* Visual bar chart */}
-              <div style={{ marginTop: '1.25rem' }}>
-                <div className="bar-chart">
-                  <BarRow label="Take Home" value={result.netAnnualIncome} total={totalGross} className="take-home" />
-                  <BarRow label="Income Tax" value={result.incomeTax} total={totalGross} className="tax" />
-                  <BarRow label="NI" value={result.nationalInsurance} total={totalGross} className="ni" />
-                  {result.totalSalarySacrifice > 0 && (
-                    <BarRow label="Sacrifice" value={result.totalSalarySacrifice} total={totalGross} className="sacrifice" />
-                  )}
-                  {result.totalPostTaxDeductions > 0 && (
-                    <BarRow label="Post-Tax" value={result.totalPostTaxDeductions} total={totalGross} className="post-tax" />
-                  )}
-                  {hasMilitaryPension && result.militaryPension > 0 && (
-                    <BarRow label="Military (net)" value={result.militaryPension - result.militaryPensionTax} total={totalGross} className="military" />
-                  )}
-                </div>
-              </div>
-            </div>
+            <NiBreakdownCard result={result} hasMilitaryPension={hasMilitaryPension} />
 
-            {/* Tax rates */}
-            <div className="card" style={{ animationDelay: '0.2s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#128200;</span>
-                Effective Rates
-              </div>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-label">Effective Tax Rate</div>
-                  <div className="stat-value">{formatPercent(result.effectiveTaxRate)}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Marginal Rate</div>
-                  <div className="stat-value">{formatPercent(result.marginalTaxRate)}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Personal Allowance</div>
-                  <div className="stat-value">{formatCurrency(result.personalAllowance)}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Taxable Income</div>
-                  <div className="stat-value">{formatCurrency(result.totalTaxableIncome)}</div>
-                </div>
-              </div>
-            </div>
+            <PensionSummaryCard
+              result={result}
+              pensionContributionAnnual={pensionContributionInput.annualValue}
+            />
 
-            {/* Tax breakdown table */}
-            <div className="card" style={{ animationDelay: '0.25s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#128209;</span>
-                Income Tax Breakdown
-                {result.usingTaxCodes && (
-                  <span className="tax-code-badge">Using Tax Codes</span>
-                )}
-              </div>
+            <PostTaxDeductionsSummaryCard result={result} />
 
-              {result.usingTaxCodes && result.employmentTaxBreakdown.length > 0 && (
-                <>
-                  <div className="breakdown-section-label">
-                    Employment Income
-                    {result.employmentTaxCodeInfo && (
-                      <span className="tax-code-inline">{result.employmentTaxCodeInfo.raw}</span>
-                    )}
-                  </div>
-                  <div className="breakdown-table-wrapper">
-                  <table className="breakdown-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Band</th>
-                        <th scope="col">Rate</th>
-                        <th scope="col">Taxable</th>
-                        <th scope="col">Tax</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {result.employmentTaxBreakdown.map((band) => (
-                        <tr key={band.name}>
-                          <td className="band-name">{band.name}</td>
-                          <td className="rate">{formatPercent(band.rate)}</td>
-                          <td>{formatCurrency(band.taxableInBand)}</td>
-                          <td>{formatCurrency(band.tax)}</td>
-                        </tr>
-                      ))}
-                      <tr className="total-row">
-                        <td colSpan={3}>Employment Tax</td>
-                        <td>{formatCurrency(result.employmentIncomeTax)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  </div>
-                </>
-              )}
-
-              {result.usingTaxCodes && result.militaryTaxBreakdown.length > 0 && (
-                <>
-                  <div className="breakdown-section-label" style={{ marginTop: '1.25rem' }}>
-                    Military Pension
-                    {result.militaryTaxCodeInfo && (
-                      <span className="tax-code-inline">{result.militaryTaxCodeInfo.raw}</span>
-                    )}
-                  </div>
-                  <div className="breakdown-table-wrapper">
-                  <table className="breakdown-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Band</th>
-                        <th scope="col">Rate</th>
-                        <th scope="col">Taxable</th>
-                        <th scope="col">Tax</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {result.militaryTaxBreakdown.map((band) => (
-                        <tr key={band.name}>
-                          <td className="band-name">{band.name}</td>
-                          <td className="rate">{formatPercent(band.rate)}</td>
-                          <td>{formatCurrency(band.taxableInBand)}</td>
-                          <td>{formatCurrency(band.tax)}</td>
-                        </tr>
-                      ))}
-                      <tr className="total-row">
-                        <td colSpan={3}>Military Pension Tax</td>
-                        <td>{formatCurrency(result.militaryPensionTax)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  </div>
-                </>
-              )}
-
-              {!result.usingTaxCodes && (
-                <div className="breakdown-table-wrapper">
-                <table className="breakdown-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Band</th>
-                      <th scope="col">Rate</th>
-                      <th scope="col">Taxable</th>
-                      <th scope="col">Tax</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.taxBreakdown.map((band) => (
-                      <tr key={band.name}>
-                        <td className="band-name">{band.name}</td>
-                        <td className="rate">{formatPercent(band.rate)}</td>
-                        <td>{formatCurrency(band.taxableInBand)}</td>
-                        <td>{formatCurrency(band.tax)}</td>
-                      </tr>
-                    ))}
-                    <tr className="total-row">
-                      <td colSpan={3}>Total Income Tax</td>
-                      <td>{formatCurrency(result.incomeTax)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                </div>
-              )}
-
-              {result.usingTaxCodes && (
-                <div className="tax-code-total">
-                  <span>Combined Income Tax</span>
-                  <span>{formatCurrency(result.incomeTax)}</span>
-                </div>
-              )}
-            </div>
-
-            {/* NI breakdown */}
-            <div className="card" style={{ animationDelay: '0.3s' }}>
-              <div className="card-title">
-                <span className="card-title-icon">&#128179;</span>
-                National Insurance Breakdown
-              </div>
-              <div className="breakdown-table-wrapper">
-              <table className="breakdown-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Band</th>
-                    <th scope="col">Rate</th>
-                    <th scope="col">Earnings</th>
-                    <th scope="col">NI</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.niBreakdown.map((band) => (
-                    <tr key={band.name}>
-                      <td className="band-name">{band.name}</td>
-                      <td className="rate">{formatPercent(band.rate)}</td>
-                      <td>{formatCurrency(band.earningsInBand)}</td>
-                      <td>{formatCurrency(band.contribution)}</td>
-                    </tr>
-                  ))}
-                  <tr className="total-row">
-                    <td colSpan={3}>Total NI</td>
-                    <td>{formatCurrency(result.nationalInsurance)}</td>
-                  </tr>
-                </tbody>
-              </table>
-              </div>
-              {hasMilitaryPension && (
-                <div className="rates-info">
-                  <span>&#127894;</span>
-                  <div>
-                    Military pension of {formatCurrency(result.militaryPension)} is <strong>exempt from NI</strong>.
-                    Tax on military pension: {formatCurrency(result.militaryPensionTax)}/year.
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Pension Summary */}
-            {result.totalPensionPot > 0 && (
-              <div className="card" style={{ animationDelay: '0.35s' }}>
-                <div className="card-title">
-                  <span className="card-title-icon">&#127974;</span>
-                  Pension Summary
-                </div>
-                <div className="stats-grid">
-                  <div className="stat-card">
-                    <div className="stat-label">Your Contribution</div>
-                    <div className="stat-value">{formatCurrency(pensionContributionInput.annualValue)}</div>
-                  </div>
-                  <div className="stat-card">
-                    <div className="stat-label">Employer Contribution</div>
-                    <div className="stat-value">{formatCurrency(result.employerPension)}</div>
-                  </div>
-                  <div className="stat-card" style={{ gridColumn: 'span 2' }}>
-                    <div className="stat-label">Total Annual Pension Pot</div>
-                    <div className="stat-value positive">{formatCurrency(result.totalPensionPot)}</div>
-                  </div>
-                </div>
-                <div className="rates-info">
-                  <span aria-hidden="true">&#9432;</span>
-                  <div>
-                    Your contribution of {formatCurrency(pensionContributionInput.annualValue)}/year is via salary sacrifice (pre-tax), saving you{' '}
-                    {formatCurrency(
-                      pensionContributionInput.annualValue * (result.effectiveTaxRate > 0
-                        ? result.marginalTaxRate + (result.taxableEmploymentIncome >= 50_270 ? 0.02 : result.taxableEmploymentIncome > 12_570 ? 0.08 : 0)
-                        : 0)
-                    )}{' '}
-                    in tax and NI. Employer contributions are paid on top of your salary.
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Post-Tax Deductions Summary */}
-            {result.totalPostTaxDeductions > 0 && (
-              <div className="card" style={{ animationDelay: '0.4s' }}>
-                <div className="card-title">
-                  <span className="card-title-icon">&#128181;</span>
-                  Post-Tax Deductions
-                </div>
-                <div className="breakdown-table-wrapper">
-                <table className="breakdown-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Deduction</th>
-                      <th scope="col">Annual</th>
-                      <th scope="col">Monthly</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.postTaxDeductions.filter((d) => d.amount > 0).map((d) => (
-                      <tr key={d.name}>
-                        <td className="band-name">{d.name}</td>
-                        <td>{formatCurrency(d.amount)}</td>
-                        <td>{formatCurrency(d.amount / 12)}</td>
-                      </tr>
-                    ))}
-                    <tr className="total-row">
-                      <td>Total</td>
-                      <td>{formatCurrency(result.totalPostTaxDeductions)}</td>
-                      <td>{formatCurrency(scalePeriod(result.totalPostTaxDeductions, 'monthly'))}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                </div>
-              </div>
-            )}
-
-            {/* Scenario Comparison */}
-            {baseline && (
+            {scenario.baseline && (
               <ScenarioComparison
-                baseline={baseline}
-                scenarioResult={scenarioResult}
-                scenarioDiff={scenarioDiff}
-                scenarioPreset={scenarioPreset}
-                onSelectPreset={setScenarioPreset}
-                onApplyOptimise={handleApplyOptimise}
-                onApplySalaryChange={handleApplySalaryChange}
-                onApplySacrifice={handleApplySacrifice}
-                optimisationTargets={optimisationTargets}
+                baseline={scenario.baseline}
+                scenarioResult={scenario.scenarioResult}
+                scenarioDiff={scenario.scenarioDiff}
+                scenarioPreset={scenario.scenarioPreset}
+                onSelectPreset={scenario.setScenarioPreset}
+                onApplyOptimise={scenario.applyOptimise}
+                onApplySalaryChange={scenario.applySalaryChange}
+                onApplySacrifice={scenario.applySacrifice}
+                optimisationTargets={scenario.optimisationTargets}
               />
             )}
           </div>
