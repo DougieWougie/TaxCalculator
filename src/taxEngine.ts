@@ -740,3 +740,21 @@ export function formatCurrency(amount: number): string {
 export function formatPercent(rate: number): string {
   return `${(rate * 100).toFixed(1)}%`;
 }
+
+/**
+ * Scale an annual figure to another pay period. Used by the UI to render monthly
+ * (or weekly / fortnightly) breakdowns without storing duplicate fields on the
+ * CalculationResult.
+ */
+export type PayPeriod = 'annual' | 'monthly' | 'fortnightly' | 'weekly';
+
+const PERIOD_DIVISOR: Record<PayPeriod, number> = {
+  annual: 1,
+  monthly: 12,
+  fortnightly: 26,
+  weekly: 52,
+};
+
+export function scalePeriod(annual: number, period: PayPeriod): number {
+  return annual / PERIOD_DIVISOR[period];
+}

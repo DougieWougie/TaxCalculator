@@ -4,6 +4,7 @@ import {
   getOptimisationTargets,
   calculateOptimalPension,
   diffResults,
+  scalePeriod,
   type CalculationInput,
 } from './taxEngine';
 
@@ -263,6 +264,21 @@ describe('military pension band-level breakdown (no tax codes)', () => {
     });
     expect(result.militaryTaxBreakdown).toEqual([]);
     expect(result.militaryPensionTax).toBe(0);
+  });
+});
+
+describe('scalePeriod', () => {
+  it('returns the input for annual', () => {
+    expect(scalePeriod(12_000, 'annual')).toBe(12_000);
+  });
+  it('divides by 12 for monthly', () => {
+    expect(scalePeriod(12_000, 'monthly')).toBe(1_000);
+  });
+  it('divides by 26 for fortnightly', () => {
+    expect(scalePeriod(26_000, 'fortnightly')).toBe(1_000);
+  });
+  it('divides by 52 for weekly', () => {
+    expect(scalePeriod(52_000, 'weekly')).toBe(1_000);
   });
 });
 
