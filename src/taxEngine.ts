@@ -519,9 +519,17 @@ export function calculate(input: CalculationInput): CalculationResult {
     }
   } else {
     // Combined: one pass across all sources, split the breakdown band-by-band.
+    // The combined breakdown only covers income above the PA, so allocate PA to
+    // sources in order (first source absorbs PA first) and pass the post-PA
+    // taxable amounts to the splitter.
     const combined = calculateIncomeTax(totalTaxableIncome, taxRegion, personalAllowance);
-    const sourceAmounts = sources.map((s) => s.amount);
-    const perSource = splitBreakdownAcrossSources(combined.breakdown, sourceAmounts);
+    let paRemaining = personalAllowance;
+    const taxableAmounts = sources.map((s) => {
+      const absorbed = Math.min(s.amount, paRemaining);
+      paRemaining -= absorbed;
+      return s.amount - absorbed;
+    });
+    const perSource = splitBreakdownAcrossSources(combined.breakdown, taxableAmounts);
 
     const empIdx = sources.findIndex((s) => s.label === 'employment');
     const milIdx = sources.findIndex((s) => s.label === 'military');

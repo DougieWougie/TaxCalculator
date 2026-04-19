@@ -207,6 +207,65 @@ describe('effectiveTaxRate', () => {
   });
 });
 
+describe('military pension band-level breakdown (no tax codes)', () => {
+  it('employment fills lower bands, military fills the remainder', () => {
+    // Scottish taxpayer: £40k employment + £10k military = £50k total
+    // PA: 12570 (no taper)
+    // Bands:
+    //   Starter:      12570..15397 = 2827  @ 19%  (all employment)
+    //   Basic:        15397..27491 = 12094 @ 20%  (all employment)
+    //   Intermediate: 27491..43662 = 16171 @ 21%
+    //     employment fills 27491..40000 = 12509
+    //     military    fills 40000..43662 = 3662
+    //   Higher:       43662..50000 = 6338  @ 42%  (all military)
+    const result = calculate({
+      annualSalary: 40_000,
+      salarySacrifice: 0,
+      pensionContribution: 0,
+      employerPension: 0,
+      militaryPension: 10_000,
+      postTaxDeductions: [],
+      taxRegion: 'scottish',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+
+    expect(result.employmentTaxBreakdown.map((b) => b.name)).toEqual([
+      'Starter Rate', 'Basic Rate', 'Intermediate Rate',
+    ]);
+
+    expect(result.militaryTaxBreakdown.map((b) => b.name)).toEqual([
+      'Intermediate Rate', 'Higher Rate',
+    ]);
+
+    const milInter = result.militaryTaxBreakdown.find((b) => b.name === 'Intermediate Rate')!;
+    const milHigher = result.militaryTaxBreakdown.find((b) => b.name === 'Higher Rate')!;
+    expect(milInter.taxableInBand).toBeCloseTo(3_662, 0);
+    expect(milHigher.taxableInBand).toBeCloseTo(6_338, 0);
+
+    expect(result.militaryPensionTax).toBeCloseTo(
+      milInter.taxableInBand * 0.21 + milHigher.taxableInBand * 0.42,
+      1,
+    );
+  });
+
+  it('military breakdown is empty when no military pension', () => {
+    const result = calculate({
+      annualSalary: 40_000,
+      salarySacrifice: 0,
+      pensionContribution: 0,
+      employerPension: 0,
+      militaryPension: 0,
+      postTaxDeductions: [],
+      taxRegion: 'scottish',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+    expect(result.militaryTaxBreakdown).toEqual([]);
+    expect(result.militaryPensionTax).toBe(0);
+  });
+});
+
 describe('diffResults', () => {
   it('calculates correct deltas between two results', () => {
     const inputA = makeInput({ annualSalary: 55_000 });
