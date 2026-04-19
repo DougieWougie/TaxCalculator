@@ -500,9 +500,12 @@ export function calculate(input: CalculationInput): CalculationResult {
 
   const totalPensionPot = pensionContribution + employerPension;
 
+  // Effective tax rate: combined income tax + NI as a fraction of total taxable income
+  // (income after salary sacrifice, before post-tax deductions). Measures the tax burden
+  // on income actually subject to PAYE.
   const effectiveTaxRate =
     totalTaxableIncome > 0
-      ? (incomeTax + nationalInsurance) / (annualSalary + militaryPension)
+      ? (incomeTax + nationalInsurance) / totalTaxableIncome
       : 0;
 
   const marginalTaxRate = getMarginalTaxRate(totalTaxableIncome, taxRegion);

@@ -170,6 +170,43 @@ describe('calculateOptimalPension', () => {
   });
 });
 
+describe('effectiveTaxRate', () => {
+  it('computes rate against taxable income, not gross', () => {
+    // £60k salary, £10k pension sacrifice → £50k taxable
+    // English taxpayer: tax = (50000 - 12570) * 0.20 = 7486
+    //                   NI  = (50270 - 12570) * 0.08 + (50000 - 50270) * 0.02 = 3016 - (0 since 50000 < 50270)
+    //                       = (50000 - 12570) * 0.08 = 2994.40
+    // Effective rate = (7486 + 2994.40) / 50000 = 0.2096 (~20.96%)
+    const result = calculate({
+      annualSalary: 60_000,
+      salarySacrifice: 0,
+      pensionContribution: 10_000,
+      employerPension: 0,
+      militaryPension: 0,
+      postTaxDeductions: [],
+      taxRegion: 'english',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+    expect(result.effectiveTaxRate).toBeCloseTo(0.2096, 3);
+  });
+
+  it('is zero when taxable income is zero', () => {
+    const result = calculate({
+      annualSalary: 10_000,
+      salarySacrifice: 0,
+      pensionContribution: 0,
+      employerPension: 0,
+      militaryPension: 0,
+      postTaxDeductions: [],
+      taxRegion: 'english',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+    expect(result.effectiveTaxRate).toBe(0);
+  });
+});
+
 describe('diffResults', () => {
   it('calculates correct deltas between two results', () => {
     const inputA = makeInput({ annualSalary: 55_000 });
