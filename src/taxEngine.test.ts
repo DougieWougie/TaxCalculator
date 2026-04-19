@@ -4,6 +4,7 @@ import {
   getOptimisationTargets,
   calculateOptimalPension,
   diffResults,
+  scalePeriod,
   type CalculationInput,
 } from './taxEngine';
 
@@ -170,6 +171,117 @@ describe('calculateOptimalPension', () => {
   });
 });
 
+describe('effectiveTaxRate', () => {
+  it('computes rate against taxable income, not gross', () => {
+    // £60k salary, £10k pension sacrifice → £50k taxable
+    // English taxpayer: tax = (50000 - 12570) * 0.20 = 7486
+    //                   NI  = (50270 - 12570) * 0.08 + (50000 - 50270) * 0.02 = 3016 - (0 since 50000 < 50270)
+    //                       = (50000 - 12570) * 0.08 = 2994.40
+    // Effective rate = (7486 + 2994.40) / 50000 = 0.2096 (~20.96%)
+    const result = calculate({
+      annualSalary: 60_000,
+      salarySacrifice: 0,
+      pensionContribution: 10_000,
+      employerPension: 0,
+      militaryPension: 0,
+      postTaxDeductions: [],
+      taxRegion: 'english',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+    expect(result.effectiveTaxRate).toBeCloseTo(0.2096, 3);
+  });
+
+  it('is zero when taxable income is zero', () => {
+    const result = calculate({
+      annualSalary: 10_000,
+      salarySacrifice: 0,
+      pensionContribution: 0,
+      employerPension: 0,
+      militaryPension: 0,
+      postTaxDeductions: [],
+      taxRegion: 'english',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+    expect(result.effectiveTaxRate).toBe(0);
+  });
+});
+
+describe('military pension band-level breakdown (no tax codes)', () => {
+  it('employment fills lower bands, military fills the remainder', () => {
+    // Scottish taxpayer: £40k employment + £10k military = £50k total
+    // PA: 12570 (no taper)
+    // Bands:
+    //   Starter:      12570..15397 = 2827  @ 19%  (all employment)
+    //   Basic:        15397..27491 = 12094 @ 20%  (all employment)
+    //   Intermediate: 27491..43662 = 16171 @ 21%
+    //     employment fills 27491..40000 = 12509
+    //     military    fills 40000..43662 = 3662
+    //   Higher:       43662..50000 = 6338  @ 42%  (all military)
+    const result = calculate({
+      annualSalary: 40_000,
+      salarySacrifice: 0,
+      pensionContribution: 0,
+      employerPension: 0,
+      militaryPension: 10_000,
+      postTaxDeductions: [],
+      taxRegion: 'scottish',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+
+    expect(result.employmentTaxBreakdown.map((b) => b.name)).toEqual([
+      'Starter Rate', 'Basic Rate', 'Intermediate Rate',
+    ]);
+
+    expect(result.militaryTaxBreakdown.map((b) => b.name)).toEqual([
+      'Intermediate Rate', 'Higher Rate',
+    ]);
+
+    const milInter = result.militaryTaxBreakdown.find((b) => b.name === 'Intermediate Rate')!;
+    const milHigher = result.militaryTaxBreakdown.find((b) => b.name === 'Higher Rate')!;
+    expect(milInter.taxableInBand).toBeCloseTo(3_662, 0);
+    expect(milHigher.taxableInBand).toBeCloseTo(6_338, 0);
+
+    expect(result.militaryPensionTax).toBeCloseTo(
+      milInter.taxableInBand * 0.21 + milHigher.taxableInBand * 0.42,
+      1,
+    );
+  });
+
+  it('military breakdown is empty when no military pension', () => {
+    const result = calculate({
+      annualSalary: 40_000,
+      salarySacrifice: 0,
+      pensionContribution: 0,
+      employerPension: 0,
+      militaryPension: 0,
+      postTaxDeductions: [],
+      taxRegion: 'scottish',
+      employmentTaxCode: '',
+      militaryPensionTaxCode: '',
+    });
+    expect(result.militaryTaxBreakdown).toEqual([]);
+    expect(result.militaryPensionTax).toBe(0);
+  });
+});
+
+describe('scalePeriod', () => {
+  it('returns the input for annual', () => {
+    expect(scalePeriod(12_000, 'annual')).toBe(12_000);
+  });
+  it('divides by 12 for monthly', () => {
+    expect(scalePeriod(12_000, 'monthly')).toBe(1_000);
+  });
+  it('divides by 26 for fortnightly', () => {
+    expect(scalePeriod(26_000, 'fortnightly')).toBe(1_000);
+  });
+  it('divides by 52 for weekly', () => {
+    expect(scalePeriod(52_000, 'weekly')).toBe(1_000);
+  });
+});
+
 describe('diffResults', () => {
   it('calculates correct deltas between two results', () => {
     const inputA = makeInput({ annualSalary: 55_000 });
@@ -182,7 +294,6 @@ describe('diffResults', () => {
     expect(diff.grossSalary).toBe(5_000);
     expect(diff.incomeTax).toBe(resultB.incomeTax - resultA.incomeTax);
     expect(diff.nationalInsurance).toBe(resultB.nationalInsurance - resultA.nationalInsurance);
-    expect(diff.monthlyTakeHome).toBe(resultB.monthlyTakeHome - resultA.monthlyTakeHome);
     expect(diff.netAnnualIncome).toBe(resultB.netAnnualIncome - resultA.netAnnualIncome);
   });
 
@@ -194,7 +305,6 @@ describe('diffResults', () => {
     expect(diff.grossSalary).toBe(0);
     expect(diff.incomeTax).toBe(0);
     expect(diff.nationalInsurance).toBe(0);
-    expect(diff.monthlyTakeHome).toBe(0);
     expect(diff.netAnnualIncome).toBe(0);
     expect(diff.effectiveTaxRate).toBe(0);
     expect(diff.totalPensionPot).toBe(0);
@@ -209,7 +319,6 @@ describe('diffResults', () => {
 
     expect(diff.grossSalary).toBeLessThan(0);
     expect(diff.netAnnualIncome).toBeLessThan(0);
-    expect(diff.monthlyTakeHome).toBeLessThan(0);
   });
 
   it('handles pension optimisation scenario', () => {

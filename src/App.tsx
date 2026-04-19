@@ -7,6 +7,7 @@ import {
   getOptimisationTargets,
   calculateOptimalPension,
   diffResults,
+  scalePeriod,
   type TaxRegion,
   type CalculationInput,
   type CalculationResult,
@@ -708,7 +709,7 @@ export default function App() {
             {/* Hero take-home */}
             <div className="summary-hero">
               <div className="summary-hero-label">Monthly Take-Home Pay</div>
-              <div className="summary-hero-value">{formatCurrency(result.monthlyTakeHome)}</div>
+              <div className="summary-hero-value">{formatCurrency(scalePeriod(result.netAnnualIncome, 'monthly'))}</div>
               <div className="summary-hero-sub">
                 {formatCurrency(result.netAnnualIncome)} per year
               </div>
@@ -746,14 +747,14 @@ export default function App() {
                 <div className="stat-card">
                   <div className="stat-label">Net Salary</div>
                   <div className="stat-value">
-                    {formatCurrency(result.monthlyTakeHome - (result.monthlyMilitaryPension - result.militaryPensionTax / 12))}
+                    {formatCurrency(scalePeriod(result.netAnnualIncome - (result.militaryPension - result.militaryPensionTax), 'monthly'))}
                   </div>
                   <div className="stat-sub">per month</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-label">Net Military Pension</div>
                   <div className="stat-value">
-                    {formatCurrency(result.monthlyMilitaryPension - result.militaryPensionTax / 12)}
+                    {formatCurrency(scalePeriod(result.militaryPension - result.militaryPensionTax, 'monthly'))}
                   </div>
                   <div className="stat-sub">per month</div>
                 </div>
@@ -788,19 +789,19 @@ export default function App() {
                   </tr>
                   <tr>
                     <td>Gross Salary</td>
-                    <td className="pl-col-monthly">{formatCurrency(result.grossMonthlySalary)}</td>
+                    <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.grossSalary, 'monthly'))}</td>
                     <td className="pl-col-annual">{formatCurrency(result.grossSalary)}</td>
                   </tr>
                   {hasMilitaryPension && (
                     <tr>
                       <td>Military Pension</td>
-                      <td className="pl-col-monthly">{formatCurrency(result.monthlyMilitaryPension)}</td>
+                      <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.militaryPension, 'monthly'))}</td>
                       <td className="pl-col-annual">{formatCurrency(result.militaryPension)}</td>
                     </tr>
                   )}
                   <tr className="subtotal-row">
                     <td>Total Income</td>
-                    <td className="pl-col-monthly">{formatCurrency(result.grossMonthlySalary + (hasMilitaryPension ? result.monthlyMilitaryPension : 0))}</td>
+                    <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.grossSalary + (hasMilitaryPension ? result.militaryPension : 0), 'monthly'))}</td>
                     <td className="pl-col-annual">{formatCurrency(result.grossSalary + (hasMilitaryPension ? result.militaryPension : 0))}</td>
                   </tr>
 
@@ -810,45 +811,45 @@ export default function App() {
                   </tr>
                   <tr>
                     <td>Income Tax</td>
-                    <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyTax)}</td>
+                    <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.incomeTax, 'monthly'))}</td>
                     <td className="pl-col-annual negative">&minus;{formatCurrency(result.incomeTax)}</td>
                   </tr>
                   <tr>
                     <td>National Insurance</td>
-                    <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyNI)}</td>
+                    <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.nationalInsurance, 'monthly'))}</td>
                     <td className="pl-col-annual negative">&minus;{formatCurrency(result.nationalInsurance)}</td>
                   </tr>
                   {result.otherSalarySacrifice > 0 && (
                     <tr>
                       <td>Pre-Tax Salary Sacrifice</td>
-                      <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyOtherSalarySacrifice)}</td>
+                      <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.otherSalarySacrifice, 'monthly'))}</td>
                       <td className="pl-col-annual negative">&minus;{formatCurrency(result.otherSalarySacrifice)}</td>
                     </tr>
                   )}
                   {result.pensionContribution > 0 && (
                     <tr>
                       <td>Pension Contribution</td>
-                      <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyPensionContribution)}</td>
+                      <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.pensionContribution, 'monthly'))}</td>
                       <td className="pl-col-annual negative">&minus;{formatCurrency(result.pensionContribution)}</td>
                     </tr>
                   )}
                   {result.totalPostTaxDeductions > 0 && (
                     <tr>
                       <td>Post-Tax Deductions</td>
-                      <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyPostTaxDeductions)}</td>
+                      <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.totalPostTaxDeductions, 'monthly'))}</td>
                       <td className="pl-col-annual negative">&minus;{formatCurrency(result.totalPostTaxDeductions)}</td>
                     </tr>
                   )}
                   <tr className="subtotal-row">
                     <td>Total Deductions</td>
-                    <td className="pl-col-monthly negative">&minus;{formatCurrency(result.monthlyTax + result.monthlyNI + result.monthlySalarySacrifice + result.monthlyPostTaxDeductions)}</td>
+                    <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.incomeTax + result.nationalInsurance + result.totalSalarySacrifice + result.totalPostTaxDeductions, 'monthly'))}</td>
                     <td className="pl-col-annual negative">&minus;{formatCurrency(result.incomeTax + result.nationalInsurance + result.totalSalarySacrifice + result.totalPostTaxDeductions)}</td>
                   </tr>
 
                   {/* Net row */}
                   <tr className="net-row">
                     <td>Net Take-Home</td>
-                    <td className="pl-col-monthly">{formatCurrency(result.monthlyTakeHome)}</td>
+                    <td className="pl-col-monthly">{formatCurrency(scalePeriod(result.netAnnualIncome, 'monthly'))}</td>
                     <td className="pl-col-annual">{formatCurrency(result.netAnnualIncome)}</td>
                   </tr>
                 </tbody>
@@ -1126,7 +1127,7 @@ export default function App() {
                     <tr className="total-row">
                       <td>Total</td>
                       <td>{formatCurrency(result.totalPostTaxDeductions)}</td>
-                      <td>{formatCurrency(result.monthlyPostTaxDeductions)}</td>
+                      <td>{formatCurrency(scalePeriod(result.totalPostTaxDeductions, 'monthly'))}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1355,7 +1356,7 @@ function ScenarioComparison({
     { label: 'Salary Sacrifice', baselineValue: formatCurrency(baseline.result.otherSalarySacrifice), scenarioValue: formatCurrency(scenarioResult.otherSalarySacrifice), diffValue: scenarioDiff.salarySacrifice, isCurrency: true },
     { label: 'Income Tax', baselineValue: formatCurrency(baseline.result.incomeTax), scenarioValue: formatCurrency(scenarioResult.incomeTax), diffValue: scenarioDiff.incomeTax, isCurrency: true, invertSign: true },
     { label: 'National Insurance', baselineValue: formatCurrency(baseline.result.nationalInsurance), scenarioValue: formatCurrency(scenarioResult.nationalInsurance), diffValue: scenarioDiff.nationalInsurance, isCurrency: true, invertSign: true },
-    { label: 'Take-Home / month', baselineValue: formatCurrency(baseline.result.monthlyTakeHome), scenarioValue: formatCurrency(scenarioResult.monthlyTakeHome), diffValue: scenarioDiff.monthlyTakeHome, isCurrency: true, highlight: true },
+    { label: 'Take-Home / month', baselineValue: formatCurrency(scalePeriod(baseline.result.netAnnualIncome, 'monthly')), scenarioValue: formatCurrency(scalePeriod(scenarioResult.netAnnualIncome, 'monthly')), diffValue: scalePeriod(scenarioDiff.netAnnualIncome, 'monthly'), isCurrency: true, highlight: true },
     { label: 'Take-Home / year', baselineValue: formatCurrency(baseline.result.netAnnualIncome), scenarioValue: formatCurrency(scenarioResult.netAnnualIncome), diffValue: scenarioDiff.netAnnualIncome, isCurrency: true },
     { label: 'Effective Rate', baselineValue: formatPercent(baseline.result.effectiveTaxRate), scenarioValue: formatPercent(scenarioResult.effectiveTaxRate), diffValue: scenarioDiff.effectiveTaxRate, isCurrency: false, invertSign: true },
     { label: 'Marginal Rate', baselineValue: formatPercent(baseline.result.marginalTaxRate), scenarioValue: formatPercent(scenarioResult.marginalTaxRate), diffValue: scenarioDiff.marginalTaxRate, isCurrency: false, invertSign: true },
@@ -1515,16 +1516,16 @@ function ScenarioComparison({
 
           {/* Summary sentence */}
           <div className="scenario-summary">
-            {scenarioDiff.monthlyTakeHome > 0 ? (
+            {scenarioDiff.netAnnualIncome > 0 ? (
               <>
                 Scenario increases take-home by{' '}
-                <strong>{formatCurrency(Math.abs(scenarioDiff.monthlyTakeHome))}/mo</strong>
+                <strong>{formatCurrency(Math.abs(scalePeriod(scenarioDiff.netAnnualIncome, 'monthly')))}/mo</strong>
                 {' '}({formatCurrency(Math.abs(scenarioDiff.netAnnualIncome))}/yr)
               </>
-            ) : scenarioDiff.monthlyTakeHome < 0 ? (
+            ) : scenarioDiff.netAnnualIncome < 0 ? (
               <>
                 Scenario reduces take-home by{' '}
-                <strong>{formatCurrency(Math.abs(scenarioDiff.monthlyTakeHome))}/mo</strong>
+                <strong>{formatCurrency(Math.abs(scalePeriod(scenarioDiff.netAnnualIncome, 'monthly')))}/mo</strong>
                 {' '}({formatCurrency(Math.abs(scenarioDiff.netAnnualIncome))}/yr)
                 {scenarioDiff.totalPensionPot > 0 && (
                   <>, but adds <strong>{formatCurrency(scenarioDiff.totalPensionPot)}/yr</strong> to your pension pot</>
