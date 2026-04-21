@@ -8,6 +8,7 @@ import {
   type PostTaxDeduction,
 } from './taxEngine';
 import { sanitizeNumber } from './sanitize';
+import { decodeInput, encodeInput, type UrlStatePayload } from './urlState';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useTheme } from './hooks/useTheme';
 import { useNumericInput } from './hooks/useNumericInput';
@@ -43,24 +44,32 @@ export default function App() {
     setDisclaimerDismissed(true);
   }, [setDisclaimerDismissed]);
 
-  const [annualSalary, setAnnualSalary] = useState('45000');
-  const salarySacrificeInput = useNumericInput('0');
-  const pensionContributionInput = useNumericInput('0');
+  const initialUrlState = useMemo(() => decodeInput(window.location.search), []);
+
+  const [annualSalary, setAnnualSalary] = useState(initialUrlState.annualSalary);
+  const salarySacrificeInput = useNumericInput(initialUrlState.salarySacrifice);
+  const pensionContributionInput = useNumericInput(initialUrlState.pensionContribution);
   const [plTableShowMonthly, setPlTableShowMonthly] = useState(true);
-  const [employerPension, setEmployerPension] = useState('0');
-  const [militaryPension, setMilitaryPension] = useState('0');
-  const [hasMilitaryPension, setHasMilitaryPension] = useState(false);
-  const [taxRegion, setTaxRegion] = useState<TaxRegion>('scottish');
+  const [employerPension, setEmployerPension] = useState(initialUrlState.employerPension);
+  const [militaryPension, setMilitaryPension] = useState(initialUrlState.militaryPension);
+  const [hasMilitaryPension, setHasMilitaryPension] = useState(initialUrlState.hasMilitaryPension);
+  const [taxRegion, setTaxRegion] = useState<TaxRegion>(initialUrlState.taxRegion);
   const [postTaxDeductions, setPostTaxDeductions] = useState<{
     id: number;
     name: string;
     amount: string;
     isMonthly: boolean;
     monthlyInput: string;
-  }[]>([]);
-  const [nextDeductionId, setNextDeductionId] = useState(1);
-  const [employmentTaxCode, setEmploymentTaxCode] = useState('');
-  const [militaryPensionTaxCode, setMilitaryPensionTaxCode] = useState('');
+  }[]>(() => initialUrlState.postTaxDeductions.map((d, i) => ({
+    id: i + 1,
+    name: d.name,
+    amount: d.amount,
+    isMonthly: false,
+    monthlyInput: '',
+  })));
+  const [nextDeductionId, setNextDeductionId] = useState(() => initialUrlState.postTaxDeductions.length + 1);
+  const [employmentTaxCode, setEmploymentTaxCode] = useState(initialUrlState.employmentTaxCode);
+  const [militaryPensionTaxCode, setMilitaryPensionTaxCode] = useState(initialUrlState.militaryPensionTaxCode);
 
   // Slider for pension % (convenience)
   const [pensionPct, setPensionPct] = useState(0);
@@ -149,6 +158,28 @@ export default function App() {
   );
 
   const scenario = useScenario(currentInput, result);
+
+  const urlPayload: UrlStatePayload = useMemo(() => ({
+    annualSalary,
+    salarySacrifice: String(salarySacrificeInput.annualValue),
+    pensionContribution: String(pensionContributionInput.annualValue),
+    employerPension,
+    militaryPension,
+    hasMilitaryPension,
+    taxRegion,
+    employmentTaxCode,
+    militaryPensionTaxCode,
+    postTaxDeductions: postTaxDeductions.map((d) => ({ name: d.name, amount: d.amount })),
+  }), [annualSalary, salarySacrificeInput.annualValue, pensionContributionInput.annualValue, employerPension, militaryPension, hasMilitaryPension, taxRegion, employmentTaxCode, militaryPensionTaxCode, postTaxDeductions]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const query = encodeInput(urlPayload).toString();
+      const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState(null, '', url);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [urlPayload]);
 
   const totalGross = sanitizeNumber(annualSalary) + (hasMilitaryPension ? sanitizeNumber(militaryPension) : 0);
 

@@ -15,6 +15,7 @@ A web application that calculates take-home pay for UK workers, accounting for i
 - **Detailed breakdown** — monthly and annual figures, effective and marginal tax rates, bar chart visualisation
 - **Dark/light theme** — toggle with preference saved in localStorage
 - **Mobile-responsive** design
+- **Shareable URLs** — every input is encoded in the query string and the *Copy shareable link* button in the header copies the current calculator state to your clipboard. Bookmark or send to a colleague to reopen with the same figures pre-filled.
 
 ## Tech Stack
 

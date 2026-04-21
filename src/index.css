@@ -231,7 +231,37 @@ body {
   text-transform: uppercase;
   background: var(--accent-glow);
   color: var(--accent);
+}
+
+.header-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-top: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.copy-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.copy-link-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-glow);
 }
 
 /* Theme Toggle */
