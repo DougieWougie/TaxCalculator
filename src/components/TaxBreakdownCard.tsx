@@ -1,10 +1,11 @@
+import { FileText } from 'lucide-react';
 import { formatCurrency, formatPercent, type CalculationResult } from '../taxEngine';
 
 export function TaxBreakdownCard({ result }: { result: CalculationResult }) {
   return (
     <div className="card" style={{ animationDelay: '0.25s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#128209;</span>
+        <span className="card-title-icon"><FileText size={18} /></span>
         Income Tax Breakdown
         {result.usingTaxCodes && (
           <span className="tax-code-badge">Using Tax Codes</span>

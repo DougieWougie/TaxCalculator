@@ -35,7 +35,7 @@ export function SliderSpinner({
           disabled={value <= min}
           aria-label="Decrease"
         >
-          &minus;
+          −
         </button>
         <input
           type="number"
@@ -62,7 +62,7 @@ export function SliderSpinner({
           disabled={value >= max}
           aria-label="Increase"
         >
-          &#43;
+          +
         </button>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { Award, CreditCard } from 'lucide-react';
 import { formatCurrency, formatPercent, type CalculationResult } from '../taxEngine';
 
 export function NiBreakdownCard({
@@ -10,7 +11,7 @@ export function NiBreakdownCard({
   return (
     <div className="card" style={{ animationDelay: '0.3s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#128179;</span>
+        <span className="card-title-icon"><CreditCard size={18} /></span>
         National Insurance Breakdown
       </div>
       <div className="breakdown-table-wrapper">
@@ -41,7 +42,7 @@ export function NiBreakdownCard({
       </div>
       {hasMilitaryPension && (
         <div className="rates-info">
-          <span>&#127894;</span>
+          <Award size={16} aria-hidden="true" />
           <div>
             Military pension of {formatCurrency(result.militaryPension)} is <strong>exempt from NI</strong>.
             Tax on military pension: {formatCurrency(result.militaryPensionTax)}/year.

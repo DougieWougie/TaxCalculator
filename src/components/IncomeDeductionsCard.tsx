@@ -1,3 +1,4 @@
+import { BarChart3 } from 'lucide-react';
 import { formatCurrency, scalePeriod, type CalculationResult } from '../taxEngine';
 import { BarRow } from './BarRow';
 import { PeriodToggle } from './PeriodToggle';
@@ -22,8 +23,8 @@ export function IncomeDeductionsCard({
   return (
     <div className="card" style={{ animationDelay: '0.15s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#128202;</span>
-        Income &amp; Deductions
+        <span className="card-title-icon"><BarChart3 size={18} /></span>
+        Income & Deductions
         <span className="pl-table-period-toggle">
           <PeriodToggle
             isMonthly={showMonthly}
@@ -67,39 +68,39 @@ export function IncomeDeductionsCard({
           </tr>
           <tr>
             <td>Income Tax</td>
-            <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.incomeTax, 'monthly'))}</td>
-            <td className="pl-col-annual negative">&minus;{formatCurrency(result.incomeTax)}</td>
+            <td className="pl-col-monthly negative">−{formatCurrency(scalePeriod(result.incomeTax, 'monthly'))}</td>
+            <td className="pl-col-annual negative">−{formatCurrency(result.incomeTax)}</td>
           </tr>
           <tr>
             <td>National Insurance</td>
-            <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.nationalInsurance, 'monthly'))}</td>
-            <td className="pl-col-annual negative">&minus;{formatCurrency(result.nationalInsurance)}</td>
+            <td className="pl-col-monthly negative">−{formatCurrency(scalePeriod(result.nationalInsurance, 'monthly'))}</td>
+            <td className="pl-col-annual negative">−{formatCurrency(result.nationalInsurance)}</td>
           </tr>
           {result.otherSalarySacrifice > 0 && (
             <tr>
               <td>Pre-Tax Salary Sacrifice</td>
-              <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.otherSalarySacrifice, 'monthly'))}</td>
-              <td className="pl-col-annual negative">&minus;{formatCurrency(result.otherSalarySacrifice)}</td>
+              <td className="pl-col-monthly negative">−{formatCurrency(scalePeriod(result.otherSalarySacrifice, 'monthly'))}</td>
+              <td className="pl-col-annual negative">−{formatCurrency(result.otherSalarySacrifice)}</td>
             </tr>
           )}
           {result.pensionContribution > 0 && (
             <tr>
               <td>Pension Contribution</td>
-              <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.pensionContribution, 'monthly'))}</td>
-              <td className="pl-col-annual negative">&minus;{formatCurrency(result.pensionContribution)}</td>
+              <td className="pl-col-monthly negative">−{formatCurrency(scalePeriod(result.pensionContribution, 'monthly'))}</td>
+              <td className="pl-col-annual negative">−{formatCurrency(result.pensionContribution)}</td>
             </tr>
           )}
           {result.totalPostTaxDeductions > 0 && (
             <tr>
               <td>Post-Tax Deductions</td>
-              <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(result.totalPostTaxDeductions, 'monthly'))}</td>
-              <td className="pl-col-annual negative">&minus;{formatCurrency(result.totalPostTaxDeductions)}</td>
+              <td className="pl-col-monthly negative">−{formatCurrency(scalePeriod(result.totalPostTaxDeductions, 'monthly'))}</td>
+              <td className="pl-col-annual negative">−{formatCurrency(result.totalPostTaxDeductions)}</td>
             </tr>
           )}
           <tr className="subtotal-row">
             <td>Total Deductions</td>
-            <td className="pl-col-monthly negative">&minus;{formatCurrency(scalePeriod(totalDeductions, 'monthly'))}</td>
-            <td className="pl-col-annual negative">&minus;{formatCurrency(totalDeductions)}</td>
+            <td className="pl-col-monthly negative">−{formatCurrency(scalePeriod(totalDeductions, 'monthly'))}</td>
+            <td className="pl-col-annual negative">−{formatCurrency(totalDeductions)}</td>
           </tr>
 
           <tr className="net-row">

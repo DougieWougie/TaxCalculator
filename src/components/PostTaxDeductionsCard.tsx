@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
+import { Receipt } from 'lucide-react';
 import { sanitizeNumber } from '../sanitize';
 import { PeriodToggle } from './PeriodToggle';
 
@@ -24,7 +25,7 @@ export function PostTaxDeductionsCard({
   return (
     <div className="card" style={{ animationDelay: '0.2s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#128181;</span>
+        <span className="card-title-icon"><Receipt size={18} /></span>
         Post-Tax Deductions
       </div>
       <p className="input-hint" style={{ marginBottom: '0.75rem' }}>
@@ -46,7 +47,7 @@ export function PostTaxDeductionsCard({
             autoComplete="off"
           />
           <div className="input-wrapper deduction-amount-wrapper">
-            <span className="input-prefix">&pound;</span>
+            <span className="input-prefix">£</span>
             <input
               className="input-field deduction-amount"
               type="text"
