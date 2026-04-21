@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Scale } from 'lucide-react';
 import {
   formatCurrency,
   formatPercent,
@@ -70,7 +71,7 @@ export function ScenarioComparison({
   return (
     <div className="card" style={{ animationDelay: '0.45s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#9878;</span>
+        <span className="card-title-icon"><Scale size={18} /></span>
         Scenario Comparison
       </div>
 
@@ -135,7 +136,7 @@ export function ScenarioComparison({
               onClick={() => setSalaryChangeIsPercent(false)}
               aria-pressed={!salaryChangeIsPercent}
             >
-              &pound;
+              £
             </button>
           </div>
           <div className="input-wrapper">
@@ -166,7 +167,7 @@ export function ScenarioComparison({
       {scenarioPreset === 'sacrifice' && (
         <div className="preset-param-row">
           <div className="input-wrapper">
-            <span className="input-prefix">&pound;</span>
+            <span className="input-prefix">£</span>
             <input
               className="input-field"
               type="text"

@@ -1,3 +1,4 @@
+import { Info, Landmark } from 'lucide-react';
 import { formatCurrency, type CalculationResult } from '../taxEngine';
 
 export function PensionSummaryCard({
@@ -21,7 +22,7 @@ export function PensionSummaryCard({
   return (
     <div className="card" style={{ animationDelay: '0.35s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#127974;</span>
+        <span className="card-title-icon"><Landmark size={18} /></span>
         Pension Summary
       </div>
       <div className="stats-grid">
@@ -39,7 +40,7 @@ export function PensionSummaryCard({
         </div>
       </div>
       <div className="rates-info">
-        <span aria-hidden="true">&#9432;</span>
+        <Info size={16} aria-hidden="true" />
         <div>
           Your contribution of {formatCurrency(pensionContributionAnnual)}/year is via salary sacrifice (pre-tax), saving you{' '}
           {formatCurrency(saving)}{' '}

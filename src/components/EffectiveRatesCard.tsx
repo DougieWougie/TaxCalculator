@@ -1,10 +1,11 @@
+import { TrendingUp } from 'lucide-react';
 import { formatCurrency, formatPercent, type CalculationResult } from '../taxEngine';
 
 export function EffectiveRatesCard({ result }: { result: CalculationResult }) {
   return (
     <div className="card" style={{ animationDelay: '0.2s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#128200;</span>
+        <span className="card-title-icon"><TrendingUp size={18} /></span>
         Effective Rates
       </div>
       <div className="stats-grid">

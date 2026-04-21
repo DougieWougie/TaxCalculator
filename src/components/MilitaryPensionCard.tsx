@@ -1,3 +1,4 @@
+import { Award } from 'lucide-react';
 import type { TaxCodeInfo } from '../taxEngine';
 import { TaxCodeInput } from './TaxCodeInput';
 
@@ -21,7 +22,7 @@ export function MilitaryPensionCard({
   return (
     <div className="card" style={{ animationDelay: '0.15s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#127894;</span>
+        <span className="card-title-icon"><Award size={18} /></span>
         Military Pension
       </div>
 
@@ -54,7 +55,7 @@ export function MilitaryPensionCard({
               Annual Military Pension
             </label>
             <div className="input-wrapper">
-              <span className="input-prefix">&pound;</span>
+              <span className="input-prefix">£</span>
               <input
                 id="military"
                 className="input-field"

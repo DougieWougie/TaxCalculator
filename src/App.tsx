@@ -160,7 +160,7 @@ export default function App() {
 
       <ThemeToggle isDark={isDark} onToggle={toggle} />
 
-      <div className="app-container">
+      <div className="app-container" data-region={taxRegion}>
         <Header />
 
         <div className="main-grid">

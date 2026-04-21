@@ -1,3 +1,4 @@
+import { Wallet } from 'lucide-react';
 import type { TaxCodeInfo, TaxRegion } from '../taxEngine';
 import type { NumericInput } from '../hooks/useNumericInput';
 import { PeriodToggle } from './PeriodToggle';
@@ -40,14 +41,14 @@ export function IncomeCard({
   return (
     <div className="card" style={{ animationDelay: '0.1s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#128176;</span>
+        <span className="card-title-icon"><Wallet size={18} /></span>
         Employment Income
       </div>
 
       <div className="input-group">
         <label className="input-label" htmlFor="salary">Annual Gross Salary</label>
         <div className="input-wrapper">
-          <span className="input-prefix">&pound;</span>
+          <span className="input-prefix">£</span>
           <input
             id="salary"
             className="input-field"
@@ -72,7 +73,7 @@ export function IncomeCard({
           />
         </div>
         <div className="input-wrapper">
-          <span className="input-prefix">&pound;</span>
+          <span className="input-prefix">£</span>
           <input
             id="sacrifice"
             className="input-field"
@@ -101,7 +102,7 @@ export function IncomeCard({
           />
         </div>
         <div className="input-wrapper">
-          <span className="input-prefix">&pound;</span>
+          <span className="input-prefix">£</span>
           <input
             id="pension"
             className="input-field"
@@ -135,7 +136,7 @@ export function IncomeCard({
           Employer Pension Contribution
         </label>
         <div className="input-wrapper">
-          <span className="input-prefix">&pound;</span>
+          <span className="input-prefix">£</span>
           <input
             id="employer-pension"
             className="input-field"
@@ -156,7 +157,7 @@ export function IncomeCard({
           ariaLabel="Employer pension contribution percentage"
         />
         <p className="input-hint">
-          Paid by your employer on top of your salary &mdash; does not reduce your take-home pay
+          Paid by your employer on top of your salary — does not reduce your take-home pay
         </p>
       </div>
 

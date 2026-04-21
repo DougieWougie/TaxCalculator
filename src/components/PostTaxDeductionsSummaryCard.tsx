@@ -1,3 +1,4 @@
+import { Receipt } from 'lucide-react';
 import { formatCurrency, scalePeriod, type CalculationResult } from '../taxEngine';
 
 export function PostTaxDeductionsSummaryCard({ result }: { result: CalculationResult }) {
@@ -6,7 +7,7 @@ export function PostTaxDeductionsSummaryCard({ result }: { result: CalculationRe
   return (
     <div className="card" style={{ animationDelay: '0.4s' }}>
       <div className="card-title">
-        <span className="card-title-icon">&#128181;</span>
+        <span className="card-title-icon"><Receipt size={18} /></span>
         Post-Tax Deductions
       </div>
       <div className="breakdown-table-wrapper">
