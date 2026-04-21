@@ -1,6 +1,6 @@
 export function DisclaimerBanner({ onDismiss }: { onDismiss: () => void }) {
   return (
-    <div className="disclaimer-banner" role="alert">
+    <div className="disclaimer-banner" role="status" aria-live="polite">
       <div className="disclaimer-content">
         <span className="disclaimer-icon" aria-hidden="true">&#9888;</span>
         <p>
