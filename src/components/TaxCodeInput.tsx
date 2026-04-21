@@ -55,8 +55,8 @@ export function TaxCodeInput({
         </p>
       )}
       {isInvalid && (
-        <p className="input-hint tax-code-hint invalid">
-          Invalid tax code. Examples: {invalidExamples}
+        <p className="input-hint tax-code-hint invalid" role="alert">
+          Unrecognised tax code &mdash; using default. Examples: {invalidExamples}
         </p>
       )}
       {!value && (
