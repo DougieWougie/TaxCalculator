@@ -75,4 +75,46 @@ describe('buildWaterfall', () => {
     const result = calculate({ ...baseInput, annualSalary: 0, pensionContribution: 0 });
     expect(buildWaterfall(result)).toEqual([]);
   });
+
+  it('handles deductions exceeding gross (net < 0) without negative percentages', () => {
+    const result = calculate({
+      ...baseInput,
+      annualSalary: 58000,
+      pensionContribution: 200000,
+    });
+    const segments = buildWaterfall(result);
+    // All percentages must be non-negative
+    segments.forEach((s) => {
+      expect(s.percentOfGross).toBeGreaterThanOrEqual(0);
+    });
+    // Percentages sum to 100
+    const percentSum = segments.reduce((acc, s) => acc + s.percentOfGross, 0);
+    expect(percentSum).toBeCloseTo(100, 6);
+    // Amounts sum to totalGross (preserving engine identity)
+    const amountSum = segments.reduce((acc, s) => acc + s.amount, 0);
+    expect(amountSum).toBeCloseTo(totalGross(result), 6);
+  });
+
+  it('net segment has negative amount when deductions exceed gross', () => {
+    const result = calculate({
+      ...baseInput,
+      annualSalary: 58000,
+      pensionContribution: 200000,
+    });
+    const segments = buildWaterfall(result);
+    const netSegment = segments.find((s) => s.key === 'net');
+    expect(netSegment?.amount).toBeLessThan(0);
+  });
+
+  it('preserves percentages in normal case (net >= 0)', () => {
+    const result = calculate(baseInput);
+    const segments = buildWaterfall(result);
+    // In the normal case, the new formula (|amount|/Σ|amount|)*100 equals
+    // (amount/gross)*100 when all amounts are positive
+    const gross = totalGross(result);
+    segments.forEach((s) => {
+      const expectedPercent = (s.amount / gross) * 100;
+      expect(s.percentOfGross).toBeCloseTo(expectedPercent, 6);
+    });
+  });
 });

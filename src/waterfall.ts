@@ -5,9 +5,9 @@ export type WaterfallKey = 'tax' | 'ni' | 'pension' | 'sacrifice' | 'posttax' | 
 export interface WaterfallSegment {
   key: WaterfallKey;
   label: string;
-  /** Annual amount, always a positive magnitude. */
+  /** Annual amount, signed (can be negative if net income is negative). */
   amount: number;
-  /** Share of total gross, 0–100. */
+  /** Non-negative share of total, 0–100. Based on |amount|/Σ|amount| to stay valid even when net < 0. */
   percentOfGross: number;
 }
 
@@ -22,7 +22,8 @@ export function totalGross(result: CalculationResult): number {
  * The engine guarantees:
  *   net = gross − totalSalarySacrifice − incomeTax − NI − totalPostTaxDeductions
  * so these segments sum exactly to gross. Zero-valued segments are dropped so
- * the rendered bar contains no invisible slivers.
+ * the rendered bar contains no invisible slivers. Percentages are derived from
+ * absolute values to stay non-negative even when net < 0.
  */
 export function buildWaterfall(result: CalculationResult): WaterfallSegment[] {
   const gross = totalGross(result);
@@ -37,7 +38,13 @@ export function buildWaterfall(result: CalculationResult): WaterfallSegment[] {
     { key: 'net', label: 'Take-home', amount: result.netAnnualIncome },
   ];
 
-  return parts
-    .filter((part) => part.amount !== 0)
-    .map((part) => ({ ...part, percentOfGross: (part.amount / gross) * 100 }));
+  const filtered = parts.filter((part) => part.amount !== 0);
+  const sumAbsolute = filtered.reduce((acc, part) => acc + Math.abs(part.amount), 0);
+
+  if (sumAbsolute === 0) return [];
+
+  return filtered.map((part) => ({
+    ...part,
+    percentOfGross: (Math.abs(part.amount) / sumAbsolute) * 100,
+  }));
 }
