@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { nudge, snapValue, type SnapOptions } from '../snapping';
 
 export function ValueControl({
@@ -33,19 +33,31 @@ export function ValueControl({
   // Local draft so the field does not fight the user mid-type (leading zeros,
   // a lone minus sign, an empty field). Committed on blur or Enter.
   const [draft, setDraft] = useState(String(value));
-  const [editing, setEditing] = useState(false);
+  const dirtyRef = useRef(false);
 
+  // Sync draft from value whenever value changes, unless the user is actively typing.
   useEffect(() => {
-    if (!editing) setDraft(String(value));
-  }, [value, editing]);
+    if (!dirtyRef.current) {
+      setDraft(String(value));
+    }
+  }, [value]);
 
   const commit = () => {
-    setEditing(false);
-    const parsed = Number(draft.replace(/,/g, ''));
+    const trimmed = draft.trim();
+    if (!trimmed) {
+      // Empty or whitespace-only field: revert without calling onChange
+      setDraft(String(value));
+      dirtyRef.current = false;
+      return;
+    }
+    const parsed = Number(trimmed.replace(/,/g, ''));
     if (Number.isFinite(parsed)) {
       onChange(snapValue(parsed, options));
+      dirtyRef.current = false;
     } else {
+      // Non-numeric input: revert without calling onChange
       setDraft(String(value));
+      dirtyRef.current = false;
     }
   };
 
@@ -57,7 +69,10 @@ export function ValueControl({
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       event.preventDefault();
       const direction = event.key === 'ArrowUp' ? 1 : -1;
-      onChange(nudge(value, direction, options, event.shiftKey));
+      const next = nudge(value, direction, options, event.shiftKey);
+      onChange(next);
+      setDraft(String(next));
+      dirtyRef.current = false;
     }
   };
 
@@ -76,8 +91,13 @@ export function ValueControl({
             inputMode="decimal"
             autoComplete="off"
             value={draft}
-            onFocus={() => setEditing(true)}
-            onChange={(e) => setDraft(e.target.value)}
+            onFocus={() => {
+              dirtyRef.current = false;
+            }}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              dirtyRef.current = true;
+            }}
             onBlur={commit}
             onKeyDown={handleKeyDown}
           />
