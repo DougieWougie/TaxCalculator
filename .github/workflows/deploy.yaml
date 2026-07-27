@@ -67,16 +67,27 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: github-actions
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GHCR_USER,GHCR_TOKEN
           script: |
             set -e
             cd /opt/docker/tax
+
+            # The GHCR package is private; authenticate the pull with this
+            # run's ephemeral GITHUB_TOKEN instead of a long-lived PAT.
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             # Deploy the exact image built for this commit, not whatever
             # "latest" happens to be. The compose file on this host reads
