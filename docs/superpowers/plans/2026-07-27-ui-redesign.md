@@ -4,7 +4,7 @@
 
 **Goal:** Replace the current card-stack UI with a "cockpit" — a fixed control rail beside a live readout — rendered in a dark-first "Instrument" visual language, with reworked inputs and a drag-up control sheet on mobile.
 
-**Architecture:** New pure helper modules (`display.ts`, `snapping.ts`, `waterfall.ts`) are built and unit-tested first, since they hold the only logic that is testable without a DOM. New components are added **alongside** the existing ones so the app keeps building and running at every commit; the old UI is swapped out and deleted in a single final task. `taxEngine.ts` is not touched.
+**Architecture:** New pure helper modules (`display.ts`, `snapping.ts`, `waterfall.ts`) are built and unit-tested first, since they hold the only logic that is testable without a DOM. New components are added **alongside** the existing ones so the app keeps building and running at every commit; the period refactor, the swap to the new UI, and the deletion of the old one all land together in the single final task, because separating them would require committing a build that does not compile. `taxEngine.ts` is not touched.
 
 **Tech Stack:** React 19, TypeScript (strict, `noUnusedLocals`/`noUnusedParameters`), Vite 6, Vitest 4 (`environment: 'node'` — no DOM testing library), plain global CSS, lucide-react icons.
 
@@ -1480,25 +1480,22 @@ git commit -m "feat: consolidate result cards into DetailSections"
 
 ---
 
-### Task 8: Page-level period setting
+### Task 8: MERGED INTO TASK 10 — do not dispatch
 
-Removes per-field `isMonthly` from `useNumericInput` and lifts the period to one page-level setting persisted in `localStorage`. This is the fiddliest refactor in the plan.
+Removing the per-field `isMonthly` from `useNumericInput` breaks every old card
+that consumes it, so as a standalone task it required committing a failing
+build — contradicting the Global Constraint that the build passes at every
+commit.
 
-`useNumericInput` currently owns an annual/monthly pair plus its own toggle. After this task it owns only the annual value and its raw text draft; display scaling is a render concern handled by `formatForPeriod`.
+**Resolution (decided before execution):** the period refactor is performed as
+Steps 1–4 of Task 10, in the same commit as the cockpit swap that deletes those
+cards. There is no red commit and no temporary dead code.
 
-**Files:**
-- Modify: `src/hooks/useNumericInput.ts` (rewrite)
-- Create: `src/hooks/usePeriod.ts`
-- Create: `src/components/PeriodSwitch.tsx`
+The reference material below is retained because Task 10 Steps 1–4 cite it.
+**Do not dispatch this task.** Its numbering is kept so earlier cross-references
+stay valid.
 
-**Interfaces:**
-- Consumes: `useLocalStorage` from `./useLocalStorage`; `type DisplayPeriod`, `toAnnual` from `../display`; `sanitizeNumber` from `../sanitize`.
-- Produces:
-  - `usePeriod(): { period: DisplayPeriod; setPeriod: (p: DisplayPeriod) => void }`
-  - `PeriodSwitch` with props `{ period: DisplayPeriod; onChange: (p: DisplayPeriod) => void }`
-  - `NumericInput` reduced to `{ raw: string; annualValue: number; setRaw: (v: string) => void; setAnnualValue: (v: number) => void }`
-
-- [ ] **Step 1: Rewrite `src/hooks/useNumericInput.ts`**
+#### Reference: `src/hooks/useNumericInput.ts` (rewrite)
 
 ```ts
 import { useState, useCallback } from 'react';
@@ -1541,7 +1538,7 @@ export function useNumericInput(initialAnnual: string = '0'): NumericInput {
 }
 ```
 
-- [ ] **Step 2: Create `src/hooks/usePeriod.ts`**
+#### Reference: `src/hooks/usePeriod.ts`
 
 ```ts
 import { useLocalStorage } from './useLocalStorage';
@@ -1558,7 +1555,7 @@ export function usePeriod() {
 }
 ```
 
-- [ ] **Step 3: Create `src/components/PeriodSwitch.tsx`**
+#### Reference: `src/components/PeriodSwitch.tsx`
 
 ```tsx
 import type { DisplayPeriod } from '../display';
@@ -1593,9 +1590,7 @@ export function PeriodSwitch({
 }
 ```
 
-- [ ] **Step 4: Add the switch styles to `src/styles/controls.css`**
-
-Append:
+#### Reference: period-switch styles, appended to `src/styles/controls.css`
 
 ```css
 .period-switch {
@@ -1623,27 +1618,11 @@ Append:
 }
 ```
 
-- [ ] **Step 5: Verify the expected breakage**
-
-Run: `npm run build`
-Expected: **FAIL**, with errors in `src/App.tsx`, `src/components/IncomeCard.tsx`, `src/components/IncomeDeductionsCard.tsx` and `src/components/MilitaryPensionCard.tsx` about missing `annual`, `monthly`, `isMonthly`, `displayValue`, `setDisplay` and `setIsMonthly` on `NumericInput`.
-
-This is the one point in the plan where the build is knowingly red. It is repaired in Task 10, which is the next task that touches `App.tsx`. **Do not** patch the old components to compile — they are being deleted.
-
-- [ ] **Step 6: Confirm the test suite still passes**
-
-Run: `npm run test`
-Expected: PASS. The suite covers pure modules only, so it is unaffected by the component breakage.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add src/hooks/useNumericInput.ts src/hooks/usePeriod.ts src/components/PeriodSwitch.tsx src/styles/controls.css
-git commit -m "refactor: lift period setting from per-field to page level
-
-Build is intentionally red at this commit; the old cards that consume the
-removed NumericInput fields are deleted in the cockpit swap."
-```
+**Which old fields disappear:** `annual`, `monthly`, `isMonthly`, `displayValue`,
+`setDisplay`, `setIsMonthly`. Their consumers — `App.tsx`, `IncomeCard.tsx`,
+`IncomeDeductionsCard.tsx`, `MilitaryPensionCard.tsx` — are all rewritten or
+deleted in Task 10, which is why the two must land together. Do not patch those
+old cards to compile; they are being deleted.
 
 ---
 
@@ -1887,10 +1866,10 @@ import './styles/cockpit.css';
 import './styles/sheet.css';
 ```
 
-- [ ] **Step 6: Verify the build still fails only for the Task 8 reason**
+- [ ] **Step 6: Verify the build passes**
 
 Run: `npm run build`
-Expected: FAIL, but **only** with the `NumericInput` errors from Task 8 in `App.tsx` and the three old cards. No new errors from `CockpitShell.tsx` or `ControlSheet.tsx`. If either new file reports an error, fix it before committing.
+Expected: PASS. Both new components are additive and nothing renders them yet.
 
 - [ ] **Step 7: Commit**
 
@@ -1901,23 +1880,58 @@ git commit -m "feat: add cockpit shell and mobile control sheet"
 
 ---
 
-### Task 10: Wire the cockpit into App and remove the old UI
+### Task 10: Period refactor, cockpit wiring, and removal of the old UI
 
-Swaps the new components in, deletes the superseded ones, and returns the build to green.
+Performs the page-level period refactor **and** the cockpit swap in one commit.
+These were originally separate tasks; they are merged because removing fields
+from `NumericInput` breaks the old cards, and those cards are deleted here — so
+splitting them would require committing a failing build.
+
+This is the largest task in the plan. Work through the steps in order: the
+period refactor (Steps 1–4) lands first, leaving the build red *in the working
+tree only*, and Steps 5–9 repair it. Nothing is committed until Step 13, by
+which point the build and the full test suite are green. **Do not commit
+before Step 13.**
 
 **Files:**
-- Modify: `src/App.tsx` (rewrite the render tree and the pension-percent state)
+- Rewrite: `src/hooks/useNumericInput.ts`
+- Create: `src/hooks/usePeriod.ts`
+- Create: `src/components/PeriodSwitch.tsx`
+- Modify: `src/styles/controls.css` (append period-switch and control-group styles)
+- Modify: `src/App.tsx` (rewrite the render tree and drop the pension-percent state)
 - Modify: `src/main.tsx` (drop the `index.css` import)
 - Create: `src/components/ControlPanel.tsx`
 - Delete: `src/index.css`, `src/components/SliderSpinner.tsx`, `src/components/PeriodToggle.tsx`, `src/components/SummaryHero.tsx`, `src/components/IncomeCard.tsx`, `src/components/MilitaryPensionCard.tsx`, `src/components/PostTaxDeductionsCard.tsx`, `src/components/IncomeDeductionsCard.tsx`, `src/components/EffectiveRatesCard.tsx`, `src/components/TaxBreakdownCard.tsx`, `src/components/NiBreakdownCard.tsx`, `src/components/PensionSummaryCard.tsx`, `src/components/PostTaxDeductionsSummaryCard.tsx`, `src/components/MilitarySplitStats.tsx`, `src/components/BarRow.tsx`, `src/components/RegionCard.tsx`
 
 **Interfaces:**
-- Consumes: everything produced by Tasks 1–9.
-- Produces: the finished UI. No new exported types.
+- Consumes: everything produced by Tasks 1–7 and 9.
+- Produces:
+  - `NumericInput` reduced to `{ raw: string; annualValue: number; setRaw: (v: string) => void; setAnnualValue: (v: number) => void }`
+  - `usePeriod(): { period: DisplayPeriod; setPeriod: (p: DisplayPeriod) => void }`
+  - `PeriodSwitch` with props `{ period: DisplayPeriod; onChange: (p: DisplayPeriod) => void }`
+  - the finished UI
 
 **Kept as-is:** `Header.tsx`, `Footer.tsx`, `DisclaimerBanner.tsx`, `ThemeToggle.tsx`, `CopyLinkButton.tsx`, `TaxCodeInput.tsx`, `ScenarioComparison.tsx`, `BaselineActions.tsx`.
 
-- [ ] **Step 1: Create `src/components/ControlPanel.tsx`**
+- [ ] **Step 1: Rewrite `src/hooks/useNumericInput.ts`**
+
+Use the code under "Task 8 → Reference: `src/hooks/useNumericInput.ts`" verbatim. It drops `annual`, `monthly`, `isMonthly`, `displayValue`, `setDisplay` and `setIsMonthly`, leaving `{ raw, annualValue, setRaw, setAnnualValue }`.
+
+- [ ] **Step 2: Create `src/hooks/usePeriod.ts`**
+
+Use the code under "Task 8 → Reference: `src/hooks/usePeriod.ts`" verbatim.
+
+- [ ] **Step 3: Create `src/components/PeriodSwitch.tsx`**
+
+Use the code under "Task 8 → Reference: `src/components/PeriodSwitch.tsx`" verbatim.
+
+- [ ] **Step 4: Append the period-switch styles to `src/styles/controls.css`**
+
+Use the CSS under "Task 8 → Reference: period-switch styles" verbatim.
+
+At this point the working tree does not compile — `App.tsx` and the old cards still reference the removed fields. That is expected and is repaired by the following steps. Do not commit yet.
+
+- [ ] **Step 5: Create `src/components/ControlPanel.tsx`**
 
 This is the rail's contents, shared by rail and sheet. It replaces `RegionCard`, `IncomeCard`, `MilitaryPensionCard` and `PostTaxDeductionsCard`.
 
@@ -2109,7 +2123,7 @@ export function ControlPanel({
 }
 ```
 
-- [ ] **Step 2: Append control-group styles to `src/styles/controls.css`**
+- [ ] **Step 6: Append control-group styles to `src/styles/controls.css`**
 
 ```css
 .control-group {
@@ -2162,7 +2176,7 @@ export function ControlPanel({
 }
 ```
 
-- [ ] **Step 3: Rewrite the body of `src/App.tsx`**
+- [ ] **Step 7: Rewrite the body of `src/App.tsx`**
 
 Replace the entire file with:
 
@@ -2346,13 +2360,13 @@ export default function App() {
 }
 ```
 
-> **Scope note — post-tax deduction editing:** the rewrite above keeps post-tax deductions in state and in the URL, and displays them in `DetailSections`, but drops the add/remove editor that `PostTaxDeductionsCard` provided. Rebuild that editor as a `control-group` inside `ControlPanel` before deleting `PostTaxDeductionsCard`. If it is not rebuilt in this task, **do not delete `PostTaxDeductionsCard.tsx`** — keep it mounted in the rail instead, and raise it as a follow-up.
+> **Scope note — post-tax deduction editing:** the rewrite in Step 7 keeps post-tax deductions in state and in the URL, and displays them in `DetailSections`, but drops the add/remove editor that `PostTaxDeductionsCard` provided. Rebuild that editor as a `control-group` inside `ControlPanel` before deleting `PostTaxDeductionsCard`. If it is not rebuilt in this task, **do not delete `PostTaxDeductionsCard.tsx`** — keep it mounted in the rail instead, and raise it as a follow-up.
 
-- [ ] **Step 4: Drop the old stylesheet import**
+- [ ] **Step 8: Drop the old stylesheet import**
 
 In `src/main.tsx`, delete the `import './index.css';` line. The five `styles/*.css` imports remain.
 
-- [ ] **Step 5: Delete the superseded files**
+- [ ] **Step 9: Delete the superseded files**
 
 ```bash
 git rm src/index.css \
@@ -2372,19 +2386,19 @@ git rm src/index.css \
   src/components/RegionCard.tsx
 ```
 
-Delete `src/components/PostTaxDeductionsCard.tsx` **only** if its editor was rebuilt in Step 3.
+Delete `src/components/PostTaxDeductionsCard.tsx` **only** if its editor was rebuilt in Step 5.
 
-- [ ] **Step 6: Verify the build is green again**
+- [ ] **Step 10: Verify the build is green**
 
 Run: `npm run build`
-Expected: PASS. `ScenarioComparison.tsx` may reference removed CSS classes — that is a visual issue, not a build error, and is addressed in Step 8.
+Expected: PASS. `ScenarioComparison.tsx` may reference removed CSS classes — that is a visual issue, not a build error, and is addressed in Step 12.
 
-- [ ] **Step 7: Verify the full test suite**
+- [ ] **Step 11: Verify the full test suite**
 
 Run: `npm run test`
 Expected: PASS — all of `taxEngine`, `urlState`, `display`, `snapping` and `waterfall`.
 
-- [ ] **Step 8: Manual verification**
+- [ ] **Step 12: Manual verification**
 
 Run: `npm run dev` and open `http://localhost:3000`. Confirm each of these, since none is covered by automated tests:
 
@@ -2401,18 +2415,19 @@ Run: `npm run dev` and open `http://localhost:3000`. Confirm each of these, sinc
 
 Fix anything that fails before committing.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 13: Commit**
 
 ```bash
 git add -A
 git commit -m "feat: replace card stack with cockpit UI
 
 Fixed control rail beside a live readout on desktop, drag-up control sheet
-on mobile, Instrument visual language throughout. Deletes index.css and the
-superseded result cards. taxEngine and urlState are unchanged."
+on mobile, Instrument visual language throughout. Lifts the Annual/Monthly
+setting from per-field to page level, deletes index.css and the superseded
+result cards. taxEngine and urlState are unchanged."
 ```
 
-- [ ] **Step 10: Update project documentation**
+- [ ] **Step 14: Update project documentation**
 
 `CLAUDE.md` describes an architecture that this branch replaces. Update the **Architecture** section: `App.tsx` is no longer "one ~1550-line root component" (it already was not), sub-components no longer live in the same file, and the styling section must describe `src/styles/` rather than `index.css`. Note the self-hosted font and that the CSP needed no change.
 
@@ -2432,14 +2447,15 @@ git commit -m "docs: update CLAUDE.md for the cockpit architecture"
 | Instrument tokens, dark base / light override | 1 |
 | Self-hosted JetBrains Mono, no CSP change | 1 |
 | `index.css` split into `src/styles/` | 1, 5, 6, 7, 9 (created), 10 (old file deleted) |
+| Task 8 merged into Task 10 | decided pre-execution; Task 8 is reference material only |
 | `CockpitShell` | 9 |
 | `ControlRail` / `ControlSheet` | 9 (containers), 10 (`ControlPanel` contents) |
 | `Readout` with waterfall + delta chip | 6 |
 | `DetailSections` replacing nine cards | 7 |
 | `ValueControl` replacing `SliderSpinner` | 5 |
 | One primary control per value, `−`/`+` removed | 5 |
-| Page-level period, `isMonthly` removed from `useNumericInput` | 8 |
-| Period in `localStorage`, not the URL | 8 |
+| Page-level period, `isMonthly` removed from `useNumericInput` | 10 (Steps 1-4) |
+| Period in `localStorage`, not the URL | 10 (Step 2) |
 | Slider snapping, arrow nudge, `Shift` coarse | 3, 5 |
 | Snap to `getOptimisationTargets()` thresholds | 10 (`pensionSnapPoints`) |
 | Scenario entry point moves to rail toggle | 10 |
@@ -2451,9 +2467,9 @@ git commit -m "docs: update CLAUDE.md for the cockpit architecture"
 
 - The spec says the scenario entry point becomes a *toggle in the control rail*. Task 10 keeps `BaselineActions` on the canvas instead, which is the smaller change; moving it into `ControlPanel` is a one-line relocation the implementer should make if the rail has room.
 - `PostTaxDeductionsCard`'s add/remove editor has no dedicated task. Task 10 Step 3 calls this out explicitly with a fallback instruction rather than leaving it to be discovered mid-implementation.
-- The spec predicted the build would break "partway through". The plan confines that to exactly one commit (Task 8), and Tasks 9's verification step asserts no *new* errors appear.
+- The spec predicted the build would break "partway through". After merging Task 8 into Task 10, **no commit on this branch fails to build** — the transient breakage exists only in Task 10's working tree, between Steps 1 and 9, and is never committed.
 
-**Type consistency:** `NumericInput` is defined in Task 8 as `{ raw, annualValue, setRaw, setAnnualValue }` and consumed in Task 10 as `pensionContribution.annualValue` / `pensionContribution.setAnnualValue` — consistent. `DisplayPeriod` is defined in Task 2 and used identically in 6, 7, 8, 10. `WaterfallSegment.percentOfGross` is produced in Task 4 and consumed in Task 6. `SnapOptions` is produced in Task 3 and consumed in Task 5.
+**Type consistency:** `NumericInput` is defined in Task 10 Step 1 as `{ raw, annualValue, setRaw, setAnnualValue }` and consumed in Task 10 as `pensionContribution.annualValue` / `pensionContribution.setAnnualValue` — consistent. `DisplayPeriod` is defined in Task 2 and used identically in 6, 7 and 10. `WaterfallSegment.percentOfGross` is produced in Task 4 and consumed in Task 6. `SnapOptions` is produced in Task 3 and consumed in Task 5. `DisplayPeriod` originates in Task 2, so Task 10's `usePeriod` has it available.
 
 **Field names verified against source**, not assumed:
 
