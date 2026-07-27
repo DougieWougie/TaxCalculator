@@ -102,7 +102,10 @@ jobs:
             fi
 
             docker compose pull
-            docker compose up -d
+            # --remove-orphans clears containers left over from earlier
+            # compose/service names (e.g. the pre-pipeline tax-app container,
+            # which otherwise holds the container_name and blocks creation).
+            docker compose up -d --remove-orphans
 
             # Wait for the container's HEALTHCHECK to pass (up to 60s).
             STATUS=starting
@@ -118,7 +121,7 @@ jobs:
             if [ "$STATUS" != "healthy" ]; then
               echo "::error::New container is '$STATUS' after 60s — rolling back"
               if [ -n "$PREV_IMAGE" ]; then
-                IMAGE_TAG="${PREV_IMAGE##*:}" docker compose up -d
+                IMAGE_TAG="${PREV_IMAGE##*:}" docker compose up -d --remove-orphans
               fi
               exit 1
             fi
