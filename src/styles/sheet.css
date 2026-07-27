@@ -58,16 +58,19 @@
 }
 
 @media (min-width: 900px) {
-  /* The same element becomes the static rail: no fixed positioning, no
-     sheet shadow or rounded top corners — it sits in the grid's first
-     column as a normal in-flow block instead. */
+  /* The same element becomes the sticky rail: no fixed positioning, no
+     sheet shadow or rounded top corners. It stays pinned in the grid's
+     first column as the canvas scrolls past, so the controls and the
+     headline figure stay on screen together while a slider is dragged. */
   .control-sheet {
-    position: static;
+    position: sticky;
+    top: 1rem;
     left: auto;
     right: auto;
     bottom: auto;
     z-index: auto;
     max-height: calc(100vh - 2rem);
+    overflow-y: auto;
     padding: 1rem;
     background: var(--surface-raised);
     border: 1px solid var(--rule);
