@@ -267,6 +267,78 @@ describe('military pension band-level breakdown (no tax codes)', () => {
   });
 });
 
+describe('military pension with employment tax code but no military code', () => {
+  // Scottish: £40k employment (code S1257L) + £12k military pension, no military code.
+  // The pension must be taxed at marginal rates stacked above employment income —
+  // NOT given its own personal allowance.
+  //   Employment: Starter 2,827 @ 19% + Basic 12,094 @ 20% + Intermediate 12,509 @ 21% = £5,582.82
+  //   Military:   Intermediate 3,662 @ 21% (£769.02) + Higher 8,338 @ 42% (£3,501.96) = £4,270.98
+  const input = makeInput({
+    annualSalary: 40_000,
+    militaryPension: 12_000,
+    employmentTaxCode: 'S1257L',
+  });
+
+  it('taxes the military pension above employment income, with no second PA', () => {
+    const result = calculate(input);
+    expect(result.militaryPensionTax).toBeCloseTo(4_270.98, 1);
+    expect(result.incomeTax).toBeCloseTo(9_853.80, 1);
+  });
+
+  it('produces the same total tax as the same incomes with no codes at all', () => {
+    const withCode = calculate(input);
+    const noCodes = calculate({ ...input, employmentTaxCode: '' });
+    expect(withCode.incomeTax).toBeCloseTo(noCodes.incomeTax, 2);
+  });
+
+  it('reports the military slice against real band names', () => {
+    const result = calculate(input);
+    expect(result.militaryTaxBreakdown.map((b) => b.name)).toEqual([
+      'Intermediate Rate', 'Higher Rate',
+    ]);
+  });
+
+  it('still applies a flat-rate military code when one is supplied', () => {
+    const result = calculate(makeInput({
+      annualSalary: 40_000,
+      militaryPension: 12_000,
+      militaryPensionTaxCode: 'SBR',
+    }));
+    expect(result.militaryPensionTax).toBeCloseTo(2_400, 1);
+    expect(result.employmentIncomeTax).toBeCloseTo(5_582.82, 1);
+  });
+});
+
+describe('personal allowance taper narrows the higher-rate threshold', () => {
+  // Band widths are fixed in taxable income, so when the PA tapers the gross
+  // threshold of every band below £125,140 falls with it.
+  it('English £110k: PA £7,570, basic band still £37,700 wide', () => {
+    // Basic: 37,700 @ 20% = 7,540; Higher: 110,000 - 45,270 = 64,730 @ 40% = 25,892
+    expect(calcTax(110_000, 'english')).toBeCloseTo(33_432, 0);
+  });
+
+  it('English £130k: PA fully tapered, basic band is £0–£37,700', () => {
+    // Basic: 37,700 @ 20% = 7,540; Higher: 87,440 @ 40% = 34,976; Additional: 4,860 @ 45% = 2,187
+    expect(calcTax(130_000, 'english')).toBeCloseTo(44_703, 0);
+  });
+
+  it('Scottish £130k: PA fully tapered, all bands shift down by £12,570', () => {
+    // Starter 2,827 @ 19% + Basic 12,094 @ 20% + Intermediate 16,171 @ 21%
+    // + Higher 31,338 @ 42% + Advanced 62,710 @ 45% + Top 4,860 @ 48% = £50,066.10
+    expect(calcTax(130_000)).toBeCloseTo(50_066.10, 0);
+  });
+
+  it('0T code applies bands from zero with correct widths', () => {
+    // English £60k on 0T: Basic 37,700 @ 20% = 7,540; Higher 22,300 @ 40% = 8,920
+    const result = calculate(makeInput({
+      annualSalary: 60_000,
+      taxRegion: 'english',
+      employmentTaxCode: '0T',
+    }));
+    expect(result.employmentIncomeTax).toBeCloseTo(16_460, 0);
+  });
+});
+
 describe('scalePeriod', () => {
   it('returns the input for annual', () => {
     expect(scalePeriod(12_000, 'annual')).toBe(12_000);
