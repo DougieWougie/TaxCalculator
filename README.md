@@ -58,6 +58,12 @@ docker-compose up --build
 
 The Docker setup uses a multi-stage build (Node for compilation, Nginx for serving) with a hardened runtime: read-only filesystem, dropped capabilities, no-new-privileges, and health checks.
 
+## CI/CD
+
+`.github/workflows/deploy.yaml` runs the test suite on every pull request and push to `main`. On `main`, once tests pass, it builds the Docker image, pushes it to GHCR (`latest` + `sha-<commit>`), and deploys the sha-pinned image to the production host over SSH. The deploy waits for the container health check and automatically rolls back to the previous image if the new one fails to come up healthy.
+
+The deploy host's compose file selects the image with `${IMAGE_TAG:-latest}`; required repository secrets are `SERVER_IP` and `SSH_PRIVATE_KEY`.
+
 ## Project Structure
 
 ```
