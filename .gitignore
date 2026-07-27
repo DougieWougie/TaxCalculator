@@ -35,3 +35,7 @@ yarn-error.log*
 
 # Docker image builds
 *.tar.gz
+
+# Brainstorming mockups
+.superpowers/
+
