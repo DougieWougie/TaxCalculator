@@ -288,19 +288,27 @@ function calculatePersonalAllowance(totalIncome: number): number {
   return Math.max(0, BASE_PERSONAL_ALLOWANCE - reduction);
 }
 
+// Gross income at which the PA is fully tapered away; also the fixed statutory
+// threshold for the English additional rate and Scottish top rate.
+const PA_TAPER_END = 125_140;
+
 /**
  * Build the effective tax bands for a given region and personal allowance.
- * Shifts the first band's threshold to match the supplied PA (tapered or full).
  * Returns a new array; does not mutate the exported band constants.
+ *
+ * The published band boundaries assume the full PA. Band widths are fixed in
+ * *taxable* income, so when the PA differs (taper, 0T/K codes) every boundary
+ * shifts with it — except £125,140, which is fixed in law.
  */
 function buildTaxBands(region: TaxRegion, personalAllowance: number): TaxBand[] {
   const base = region === 'scottish' ? SCOTTISH_TAX_BANDS : ENGLISH_TAX_BANDS;
-  return base.map((band) => {
-    if (band.threshold <= BASE_PERSONAL_ALLOWANCE) {
-      return { ...band, threshold: personalAllowance };
-    }
-    return band;
-  });
+  const shift = BASE_PERSONAL_ALLOWANCE - personalAllowance;
+  const adjust = (bound: number) => (bound >= PA_TAPER_END ? bound : bound - shift);
+  return base.map((band) => ({
+    ...band,
+    threshold: adjust(band.threshold),
+    upperBound: adjust(band.upperBound),
+  }));
 }
 
 function calculateIncomeTax(
@@ -422,17 +430,6 @@ function buildSources(input: CalculationInput): IncomeSource[] {
   return sources;
 }
 
-function synthesizeDefaultCode(personalAllowance: number, region: TaxRegion): TaxCodeInfo {
-  return {
-    raw: '',
-    type: 'cumulative',
-    personalAllowance,
-    kAdjustment: 0,
-    isScottish: region === 'scottish',
-    isValid: true,
-  };
-}
-
 /**
  * Split a combined band-level breakdown across ordered income sources.
  * Earlier sources fill each band first; later sources fill the remainder.
@@ -487,45 +484,38 @@ export function calculate(input: CalculationInput): CalculationResult {
   const personalAllowance = calculatePersonalAllowance(totalTaxableIncome);
 
   // --- Income tax: per-source calculation ---
+  // Every source gets a slice of one combined default calculation (single PA,
+  // sources stacked in order — employment fills the lower bands, military on
+  // top). A source with a tax code overrides its slice with the code-based
+  // calculation, so a codeless military pension alongside a coded employment
+  // is taxed at marginal rates above employment income rather than being
+  // granted a second personal allowance.
+  const combined = calculateIncomeTax(totalTaxableIncome, taxRegion, personalAllowance);
+  let paRemaining = personalAllowance;
+  const taxableAmounts = sources.map((s) => {
+    const absorbed = Math.min(s.amount, paRemaining);
+    paRemaining -= absorbed;
+    return s.amount - absorbed;
+  });
+  const perSource = splitBreakdownAcrossSources(combined.breakdown, taxableAmounts);
+
   let employmentIncomeTax = 0;
   let militaryPensionTax = 0;
   let employmentTaxBreakdown: TaxBreakdownBand[] = [];
   let militaryTaxBreakdown: TaxBreakdownBand[] = [];
 
-  if (usingTaxCodes) {
-    // Per-source: each source uses its own code (or a default if none supplied).
-    for (const src of sources) {
-      const code = src.code ?? synthesizeDefaultCode(personalAllowance, taxRegion);
-      const { total, breakdown } = calculateTaxWithCode(src.amount, code, taxRegion);
-      if (src.label === 'employment') {
-        employmentIncomeTax = total;
-        employmentTaxBreakdown = breakdown;
-      } else {
-        militaryPensionTax = total;
-        militaryTaxBreakdown = breakdown;
-      }
+  sources.forEach((src, i) => {
+    const { total, breakdown } = src.code
+      ? calculateTaxWithCode(src.amount, src.code, taxRegion)
+      : { total: perSource[i].reduce((s, b) => s + b.tax, 0), breakdown: perSource[i] };
+    if (src.label === 'employment') {
+      employmentIncomeTax = total;
+      employmentTaxBreakdown = breakdown;
+    } else {
+      militaryPensionTax = total;
+      militaryTaxBreakdown = breakdown;
     }
-  } else {
-    // Combined: one pass across all sources, split the breakdown band-by-band.
-    // The combined breakdown only covers income above the PA, so allocate PA to
-    // sources in order (first source absorbs PA first) and pass the post-PA
-    // taxable amounts to the splitter.
-    const combined = calculateIncomeTax(totalTaxableIncome, taxRegion, personalAllowance);
-    let paRemaining = personalAllowance;
-    const taxableAmounts = sources.map((s) => {
-      const absorbed = Math.min(s.amount, paRemaining);
-      paRemaining -= absorbed;
-      return s.amount - absorbed;
-    });
-    const perSource = splitBreakdownAcrossSources(combined.breakdown, taxableAmounts);
-
-    const empIdx = sources.findIndex((s) => s.label === 'employment');
-    const milIdx = sources.findIndex((s) => s.label === 'military');
-    employmentTaxBreakdown = empIdx >= 0 ? perSource[empIdx] : [];
-    militaryTaxBreakdown = milIdx >= 0 ? perSource[milIdx] : [];
-    employmentIncomeTax = employmentTaxBreakdown.reduce((s, b) => s + b.tax, 0);
-    militaryPensionTax = militaryTaxBreakdown.reduce((s, b) => s + b.tax, 0);
-  }
+  });
 
   const incomeTax = employmentIncomeTax + militaryPensionTax;
   const taxBreakdown: TaxBreakdownBand[] = militaryPension > 0
