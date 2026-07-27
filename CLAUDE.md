@@ -42,7 +42,7 @@ NI is always computed only on employment income (not military pension) and is un
 
 ## Deployment
 
-`.github/workflows/deploy.yaml` fires on push to `main`: builds the Docker image, pushes to GHCR as `ghcr.io/<repo>:latest` + `:sha-…`, then SSHes into the deploy host and runs `docker compose pull && up -d` in `/opt/docker/myapp`. The production image runs nginx 1.27-alpine as non-root with a read-only root filesystem, dropped capabilities, `no-new-privileges`, and a strict CSP defined in `nginx.conf` — new external origins (fonts, analytics, APIs) need a CSP update or they will be blocked.
+`.github/workflows/deploy.yaml` runs the vitest suite on every PR and push to `main`. On `main` only, a passing test job gates the Docker build, which pushes to GHCR as `ghcr.io/<repo>:latest` + `:sha-<full commit>`, then SSHes into the deploy host and runs `docker compose pull && up -d` in `/opt/docker/myapp` pinned to that commit's sha tag via the `IMAGE_TAG` env var (the host's compose file reads `${IMAGE_TAG:-latest}`). The deploy script waits up to 60s for the container HEALTHCHECK to pass, rolls back to the previous image and fails the run if it doesn't, and prunes unused images older than 7 days. A `concurrency` group queues deploys in commit order. The production image runs nginx 1.27-alpine as non-root with a read-only root filesystem, dropped capabilities, `no-new-privileges`, and a strict CSP defined in `nginx.conf` — new external origins (fonts, analytics, APIs) need a CSP update or they will be blocked.
 
 ## Docs
 
