@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   calculate,
   parseTaxCode,
+  getOptimisationTargets,
   type TaxRegion,
   type CalculationInput,
   type CalculationResult,
@@ -13,137 +14,89 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useTheme } from './hooks/useTheme';
 import { useNumericInput } from './hooks/useNumericInput';
 import { useScenario } from './hooks/useScenario';
+import { usePeriod } from './hooks/usePeriod';
+import { CockpitShell } from './components/CockpitShell';
+import { ControlPanel, type DeductionRow } from './components/ControlPanel';
+import { Readout } from './components/Readout';
+import { DetailSections } from './components/DetailSections';
 import { ScenarioComparison } from './components/ScenarioComparison';
+import { BaselineActions } from './components/BaselineActions';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { DisclaimerBanner } from './components/DisclaimerBanner';
 import { ThemeToggle } from './components/ThemeToggle';
-import { RegionCard } from './components/RegionCard';
-import { IncomeCard } from './components/IncomeCard';
-import { MilitaryPensionCard } from './components/MilitaryPensionCard';
-import { PostTaxDeductionsCard } from './components/PostTaxDeductionsCard';
-import { SummaryHero } from './components/SummaryHero';
-import { BaselineActions } from './components/BaselineActions';
-import { MilitarySplitStats } from './components/MilitarySplitStats';
-import { IncomeDeductionsCard } from './components/IncomeDeductionsCard';
-import { EffectiveRatesCard } from './components/EffectiveRatesCard';
-import { TaxBreakdownCard } from './components/TaxBreakdownCard';
-import { NiBreakdownCard } from './components/NiBreakdownCard';
-import { PensionSummaryCard } from './components/PensionSummaryCard';
-import { PostTaxDeductionsSummaryCard } from './components/PostTaxDeductionsSummaryCard';
 
 export default function App() {
   const { isDark, toggle } = useTheme();
+  const { period, setPeriod } = usePeriod();
+
   const [disclaimerDismissed, setDisclaimerDismissed] = useLocalStorage<boolean>(
     'disclaimer-dismissed',
     false
   );
-  const showDisclaimer = !disclaimerDismissed;
-
-  const dismissDisclaimer = useCallback(() => {
-    setDisclaimerDismissed(true);
-  }, [setDisclaimerDismissed]);
+  const dismissDisclaimer = useCallback(() => setDisclaimerDismissed(true), [setDisclaimerDismissed]);
 
   const initialUrlState = useMemo(() => decodeInput(window.location.search), []);
 
-  const [annualSalary, setAnnualSalary] = useState(initialUrlState.annualSalary);
+  const [annualSalary, setAnnualSalary] = useState(() => sanitizeNumber(initialUrlState.annualSalary));
   const salarySacrificeInput = useNumericInput(initialUrlState.salarySacrifice);
   const pensionContributionInput = useNumericInput(initialUrlState.pensionContribution);
-  const [plTableShowMonthly, setPlTableShowMonthly] = useState(true);
-  const [employerPension, setEmployerPension] = useState(initialUrlState.employerPension);
-  const [militaryPension, setMilitaryPension] = useState(initialUrlState.militaryPension);
+  const [employerPension, setEmployerPension] = useState(() => sanitizeNumber(initialUrlState.employerPension));
+  const [militaryPension, setMilitaryPension] = useState(() => sanitizeNumber(initialUrlState.militaryPension));
   const [hasMilitaryPension, setHasMilitaryPension] = useState(initialUrlState.hasMilitaryPension);
   const [taxRegion, setTaxRegion] = useState<TaxRegion>(initialUrlState.taxRegion);
-  const [postTaxDeductions, setPostTaxDeductions] = useState<{
-    id: number;
-    name: string;
-    amount: string;
-    isMonthly: boolean;
-    monthlyInput: string;
-  }[]>(() => initialUrlState.postTaxDeductions.map((d, i) => ({
-    id: i + 1,
-    name: d.name,
-    amount: d.amount,
-    isMonthly: false,
-    monthlyInput: '',
-  })));
-  const [nextDeductionId, setNextDeductionId] = useState(() => initialUrlState.postTaxDeductions.length + 1);
   const [employmentTaxCode, setEmploymentTaxCode] = useState(initialUrlState.employmentTaxCode);
   const [militaryPensionTaxCode, setMilitaryPensionTaxCode] = useState(initialUrlState.militaryPensionTaxCode);
 
-  // Slider for pension % (convenience)
-  const [pensionPct, setPensionPct] = useState(0);
-
-  // Slider for employer pension %
-  const [employerPensionPct, setEmployerPensionPct] = useState(0);
-
-  const handleEmployerPensionPctChange = useCallback(
-    (pct: number) => {
-      setEmployerPensionPct(pct);
-      const salary = sanitizeNumber(annualSalary);
-      setEmployerPension(((salary * pct) / 100).toFixed(0));
-    },
-    [annualSalary]
+  // Post-tax deductions keep a small internal id purely for React keys and
+  // row identity while editing; the id never leaves this component — the URL
+  // payload and the calculation input both use the frozen { name, amount }
+  // shape.
+  const [postTaxDeductions, setPostTaxDeductions] = useState<DeductionRow[]>(() =>
+    initialUrlState.postTaxDeductions.map((d, i) => ({ id: i + 1, name: d.name, amount: d.amount }))
+  );
+  const [nextDeductionId, setNextDeductionId] = useState(
+    () => initialUrlState.postTaxDeductions.length + 1
   );
 
-  const handleEmployerPensionChange = useCallback((value: string) => {
-    setEmployerPension(value);
-    setEmployerPensionPct(0);
+  const addDeduction = useCallback(() => {
+    setPostTaxDeductions((prev) => [...prev, { id: nextDeductionId, name: '', amount: '0' }]);
+    setNextDeductionId((id) => id + 1);
+  }, [nextDeductionId]);
+
+  const removeDeduction = useCallback((id: number) => {
+    setPostTaxDeductions((prev) => prev.filter((d) => d.id !== id));
   }, []);
 
-  const handlePensionTyped = useCallback(() => {
-    setPensionPct(0);
+  const changeDeductionName = useCallback((id: number, name: string) => {
+    setPostTaxDeductions((prev) => prev.map((d) => (d.id === id ? { ...d, name } : d)));
   }, []);
 
-  // Recalc employer pension when salary changes (if using slider)
-  useEffect(() => {
-    if (employerPensionPct > 0) {
-      const salary = sanitizeNumber(annualSalary);
-      setEmployerPension(((salary * employerPensionPct) / 100).toFixed(0));
-    }
-  }, [annualSalary, employerPensionPct]);
-
-  const { setAnnualValue: setPensionAnnualValue } = pensionContributionInput;
-
-  const handlePensionPctChange = useCallback(
-    (pct: number) => {
-      setPensionPct(pct);
-      const salary = sanitizeNumber(annualSalary);
-      setPensionAnnualValue(Math.round((salary * pct) / 100));
-    },
-    [annualSalary, setPensionAnnualValue]
-  );
-
-  // Recalc pension amount when salary changes (if using slider)
-  useEffect(() => {
-    if (pensionPct > 0) {
-      const salary = sanitizeNumber(annualSalary);
-      setPensionAnnualValue(Math.round((salary * pensionPct) / 100));
-    }
-  }, [annualSalary, pensionPct, setPensionAnnualValue]);
+  const changeDeductionAmount = useCallback((id: number, amount: string) => {
+    setPostTaxDeductions((prev) => prev.map((d) => (d.id === id ? { ...d, amount } : d)));
+  }, []);
 
   const parsedPostTaxDeductions: PostTaxDeduction[] = useMemo(
     () => postTaxDeductions.map((d) => ({ name: d.name || 'Deduction', amount: sanitizeNumber(d.amount) })),
     [postTaxDeductions]
   );
 
-  // Tax code validation (for display hints)
   const empTaxCodeInfo = useMemo(
-    () => employmentTaxCode ? parseTaxCode(employmentTaxCode) : null,
+    () => (employmentTaxCode ? parseTaxCode(employmentTaxCode) : null),
     [employmentTaxCode]
   );
   const milTaxCodeInfo = useMemo(
-    () => militaryPensionTaxCode ? parseTaxCode(militaryPensionTaxCode) : null,
+    () => (militaryPensionTaxCode ? parseTaxCode(militaryPensionTaxCode) : null),
     [militaryPensionTaxCode]
   );
 
   const currentInput: CalculationInput = useMemo(
     () => ({
-      annualSalary: sanitizeNumber(annualSalary),
+      annualSalary,
       salarySacrifice: salarySacrificeInput.annualValue,
       pensionContribution: pensionContributionInput.annualValue,
-      employerPension: sanitizeNumber(employerPension),
-      militaryPension: hasMilitaryPension ? sanitizeNumber(militaryPension) : 0,
+      employerPension,
+      militaryPension: hasMilitaryPension ? militaryPension : 0,
       postTaxDeductions: parsedPostTaxDeductions,
       taxRegion,
       employmentTaxCode,
@@ -152,19 +105,22 @@ export default function App() {
     [annualSalary, salarySacrificeInput.annualValue, pensionContributionInput.annualValue, employerPension, militaryPension, hasMilitaryPension, parsedPostTaxDeductions, taxRegion, employmentTaxCode, militaryPensionTaxCode]
   );
 
-  const result: CalculationResult = useMemo(
-    () => calculate(currentInput),
-    [currentInput]
-  );
+  const result: CalculationResult = useMemo(() => calculate(currentInput), [currentInput]);
 
   const scenario = useScenario(currentInput, result);
 
+  // Band thresholds the pension slider should snap onto.
+  const pensionSnapPoints = useMemo(
+    () => getOptimisationTargets(currentInput, result).map((target) => target.threshold),
+    [currentInput, result]
+  );
+
   const urlPayload: UrlStatePayload = useMemo(() => ({
-    annualSalary,
+    annualSalary: String(annualSalary),
     salarySacrifice: String(salarySacrificeInput.annualValue),
     pensionContribution: String(pensionContributionInput.annualValue),
-    employerPension,
-    militaryPension,
+    employerPension: String(employerPension),
+    militaryPension: String(militaryPension),
     hasMilitaryPension,
     taxRegion,
     employmentTaxCode,
@@ -181,117 +137,71 @@ export default function App() {
     return () => clearTimeout(timeout);
   }, [urlPayload]);
 
-  const totalGross = sanitizeNumber(annualSalary) + (hasMilitaryPension ? sanitizeNumber(militaryPension) : 0);
+  const controls = (
+    <ControlPanel
+      period={period}
+      onPeriodChange={setPeriod}
+      taxRegion={taxRegion}
+      onTaxRegionChange={setTaxRegion}
+      annualSalary={annualSalary}
+      onAnnualSalaryChange={setAnnualSalary}
+      pensionContribution={pensionContributionInput}
+      pensionSnapPoints={pensionSnapPoints}
+      employerPension={employerPension}
+      onEmployerPensionChange={setEmployerPension}
+      salarySacrifice={salarySacrificeInput}
+      employmentTaxCode={employmentTaxCode}
+      onEmploymentTaxCodeChange={setEmploymentTaxCode}
+      empTaxCodeInfo={empTaxCodeInfo}
+      hasMilitaryPension={hasMilitaryPension}
+      onHasMilitaryPensionChange={setHasMilitaryPension}
+      militaryPension={militaryPension}
+      onMilitaryPensionChange={setMilitaryPension}
+      militaryPensionTaxCode={militaryPensionTaxCode}
+      onMilitaryPensionTaxCodeChange={setMilitaryPensionTaxCode}
+      milTaxCodeInfo={milTaxCodeInfo}
+      postTaxDeductions={postTaxDeductions}
+      onDeductionNameChange={changeDeductionName}
+      onDeductionAmountChange={changeDeductionAmount}
+      onDeductionAdd={addDeduction}
+      onDeductionRemove={removeDeduction}
+    />
+  );
 
   return (
     <>
-      <div className="bg-pattern" />
-
-      {showDisclaimer && <DisclaimerBanner onDismiss={dismissDisclaimer} />}
-
+      {!disclaimerDismissed && <DisclaimerBanner onDismiss={dismissDisclaimer} />}
       <ThemeToggle isDark={isDark} onToggle={toggle} />
 
-      <div className="app-container" data-region={taxRegion}>
-        <Header />
+      <Header />
 
-        <div className="main-grid">
-          {/* LEFT: Inputs */}
-          <div className="input-column">
-            <RegionCard taxRegion={taxRegion} onChange={setTaxRegion} />
+      <CockpitShell controls={controls}>
+        <Readout result={result} period={period} diff={scenario.scenarioDiff} />
 
-            <IncomeCard
-              annualSalary={annualSalary}
-              onAnnualSalaryChange={setAnnualSalary}
-              salarySacrifice={salarySacrificeInput}
-              pensionContribution={pensionContributionInput}
-              pensionPct={pensionPct}
-              onPensionPctChange={handlePensionPctChange}
-              onPensionTyped={handlePensionTyped}
-              employerPension={employerPension}
-              onEmployerPensionChange={handleEmployerPensionChange}
-              employerPensionPct={employerPensionPct}
-              onEmployerPensionPctChange={handleEmployerPensionPctChange}
-              employmentTaxCode={employmentTaxCode}
-              onEmploymentTaxCodeChange={setEmploymentTaxCode}
-              empTaxCodeInfo={empTaxCodeInfo}
-              taxRegion={taxRegion}
-            />
+        <BaselineActions
+          hasBaseline={!!scenario.baseline}
+          onSave={scenario.saveBaseline}
+          onClear={scenario.clearBaseline}
+        />
 
-            <MilitaryPensionCard
-              hasMilitaryPension={hasMilitaryPension}
-              onHasMilitaryPensionChange={setHasMilitaryPension}
-              militaryPension={militaryPension}
-              onMilitaryPensionChange={setMilitaryPension}
-              militaryPensionTaxCode={militaryPensionTaxCode}
-              onMilitaryPensionTaxCodeChange={setMilitaryPensionTaxCode}
-              milTaxCodeInfo={milTaxCodeInfo}
-            />
+        <DetailSections result={result} period={period} />
 
-            <PostTaxDeductionsCard
-              postTaxDeductions={postTaxDeductions}
-              setPostTaxDeductions={setPostTaxDeductions}
-              nextDeductionId={nextDeductionId}
-              setNextDeductionId={setNextDeductionId}
-            />
-          </div>
+        {scenario.baseline && (
+          <ScenarioComparison
+            baseline={scenario.baseline}
+            scenarioResult={scenario.scenarioResult}
+            scenarioDiff={scenario.scenarioDiff}
+            scenarioPreset={scenario.scenarioPreset}
+            onSelectPreset={scenario.setScenarioPreset}
+            onApplyOptimise={scenario.applyOptimise}
+            onApplySalaryChange={scenario.applySalaryChange}
+            onApplySacrifice={scenario.applySacrifice}
+            optimisationTargets={scenario.optimisationTargets}
+          />
+        )}
+      </CockpitShell>
 
-          {/* RIGHT: Results */}
-          <div className="results-column">
-            <SummaryHero netAnnualIncome={result.netAnnualIncome} />
-
-            <BaselineActions
-              hasBaseline={!!scenario.baseline}
-              onSave={scenario.saveBaseline}
-              onClear={scenario.clearBaseline}
-            />
-
-            {hasMilitaryPension && (
-              <MilitarySplitStats
-                netAnnualIncome={result.netAnnualIncome}
-                militaryPension={result.militaryPension}
-                militaryPensionTax={result.militaryPensionTax}
-              />
-            )}
-
-            <IncomeDeductionsCard
-              result={result}
-              hasMilitaryPension={hasMilitaryPension}
-              showMonthly={plTableShowMonthly}
-              onShowMonthlyChange={setPlTableShowMonthly}
-              totalGross={totalGross}
-            />
-
-            <EffectiveRatesCard result={result} />
-
-            <TaxBreakdownCard result={result} />
-
-            <NiBreakdownCard result={result} hasMilitaryPension={hasMilitaryPension} />
-
-            <PensionSummaryCard
-              result={result}
-              pensionContributionAnnual={pensionContributionInput.annualValue}
-            />
-
-            <PostTaxDeductionsSummaryCard result={result} />
-
-            {scenario.baseline && (
-              <ScenarioComparison
-                baseline={scenario.baseline}
-                scenarioResult={scenario.scenarioResult}
-                scenarioDiff={scenario.scenarioDiff}
-                scenarioPreset={scenario.scenarioPreset}
-                onSelectPreset={scenario.setScenarioPreset}
-                onApplyOptimise={scenario.applyOptimise}
-                onApplySalaryChange={scenario.applySalaryChange}
-                onApplySacrifice={scenario.applySacrifice}
-                optimisationTargets={scenario.optimisationTargets}
-              />
-            )}
-          </div>
-        </div>
-
-        <Footer />
-      </div>
+      <Footer />
     </>
   );
 }

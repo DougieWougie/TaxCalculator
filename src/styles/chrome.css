@@ -1,0 +1,190 @@
+/* Page chrome: disclaimer banner, header, footer, theme toggle, copy-link
+   button. These components are unchanged from the old UI but their styling
+   lived entirely in the deleted index.css, so it is rebuilt here on the
+   Instrument token set. */
+
+.disclaimer-banner {
+  position: relative;
+  z-index: 10;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--ni);
+  padding: 0.75rem 1.5rem;
+}
+
+.disclaimer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.disclaimer-icon {
+  flex-shrink: 0;
+  color: var(--ni);
+}
+
+.disclaimer-content p {
+  flex: 1;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.disclaimer-content p strong {
+  color: var(--ni);
+}
+
+.disclaimer-dismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--text-dim);
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.disclaimer-dismiss:hover {
+  color: var(--figure);
+}
+
+.disclaimer-dismiss svg {
+  width: 100%;
+  height: 100%;
+}
+
+.header {
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem 0;
+}
+
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--figure);
+  letter-spacing: -0.01em;
+  margin-bottom: 0.4rem;
+}
+
+.header p {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.tax-year-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid var(--rule);
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.header-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.copy-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.copy-link-btn:hover {
+  color: var(--figure);
+  border-color: var(--rule-strong);
+}
+
+.theme-toggle-wrapper {
+  position: fixed;
+  top: 1.1rem;
+  right: 1.1rem;
+  z-index: 100;
+}
+
+.theme-toggle {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  border: 1px solid var(--rule);
+  background: var(--surface-raised);
+  cursor: pointer;
+  position: relative;
+}
+
+.theme-toggle:hover {
+  border-color: var(--rule-strong);
+}
+
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--rule-strong);
+  transition: transform 160ms ease-out;
+}
+
+[data-theme='dark'] .theme-toggle::after {
+  transform: translateX(22px);
+}
+
+.theme-toggle-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+}
+
+.theme-toggle-icon.sun {
+  left: 5px;
+}
+
+.theme-toggle-icon.moon {
+  right: 5px;
+}
+
+.footer {
+  text-align: center;
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding: 1.25rem 1rem 2rem;
+  border-top: 1px solid var(--rule);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+
+.footer a {
+  color: var(--text-dim);
+  text-decoration: underline;
+}
+
+.footer a:hover {
+  color: var(--figure);
+}

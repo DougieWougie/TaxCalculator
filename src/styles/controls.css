@@ -79,3 +79,176 @@
   color: var(--text-dim);
   font-size: 0.7rem;
 }
+
+.period-switch {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.period-switch button {
+  padding: 0.25rem 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.period-switch button.active {
+  background: var(--rule);
+  color: var(--figure);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-bottom: 0.9rem;
+}
+
+.control-group + .control-group {
+  border-top: 1px solid var(--rule);
+  padding-top: 0.9rem;
+}
+
+.control-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+}
+
+.region-switch {
+  display: flex;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.region-switch button {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.region-switch button.active {
+  background: var(--rule);
+  color: var(--figure);
+}
+
+.control-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.control-hint {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+.deduction-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.deduction-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.deduction-name:focus {
+  border-color: var(--rule-strong);
+  outline: none;
+}
+
+.deduction-amount-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0 0.35rem;
+  flex-shrink: 0;
+}
+
+.deduction-amount-wrapper:focus-within {
+  border-color: var(--rule-strong);
+}
+
+.deduction-amount-wrapper .value-control-affix {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+.deduction-amount {
+  width: 6ch;
+  padding: 0.3rem 0.1rem;
+  border: 0;
+  background: transparent;
+  color: var(--figure);
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.deduction-amount:focus {
+  outline: none;
+}
+
+.deduction-remove {
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.deduction-remove:hover {
+  border-color: var(--negative);
+  color: var(--negative);
+}
+
+.add-deduction-btn {
+  align-self: flex-start;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.add-deduction-btn:hover {
+  border-color: var(--rule-strong);
+  color: var(--figure);
+}

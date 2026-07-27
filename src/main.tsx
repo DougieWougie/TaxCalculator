@@ -9,7 +9,8 @@ import './styles/readout.css'
 import './styles/details.css'
 import './styles/cockpit.css'
 import './styles/sheet.css'
-import './index.css'
+import './styles/chrome.css'
+import './styles/widgets.css'
 
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('Root element not found');

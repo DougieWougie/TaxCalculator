@@ -1,0 +1,373 @@
+/* Kept-as-is widgets: TaxCodeInput, BaselineActions, ScenarioComparison.
+   These components render inside CockpitShell's canvas alongside Readout and
+   DetailSections, so a "card" here matches the border/radius/surface those
+   use, and toggle/active styling matches PeriodSwitch and the region switch
+   in controls.css rather than introducing a new accent colour. */
+
+.card {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  padding: 1rem;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--figure);
+  margin-bottom: 0.85rem;
+}
+
+.card-title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+/* Input primitives shared by TaxCodeInput and the scenario preset forms. */
+.input-group {
+  margin-bottom: 0.85rem;
+}
+
+.input-group:last-child {
+  margin-bottom: 0;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.04em;
+}
+
+.input-hint {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-prefix {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 1.75rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--figure);
+  font-family: inherit;
+  font-size: 0.85rem;
+  -moz-appearance: textfield;
+}
+
+.input-field::-webkit-outer-spin-button,
+.input-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--rule-strong);
+}
+
+.input-field::placeholder {
+  color: var(--text-dim);
+}
+
+/* Tax code inputs */
+.tax-code-wrapper {
+  position: relative;
+}
+
+.tax-code-input {
+  padding-left: 0.75rem !important;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.tax-code-input.valid {
+  border-color: var(--positive);
+}
+
+.tax-code-input.invalid {
+  border-color: var(--negative);
+}
+
+.tax-code-status {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.tax-code-status.valid {
+  color: var(--positive);
+}
+
+.tax-code-status.invalid {
+  color: var(--negative);
+}
+
+.tax-code-hint.valid {
+  color: var(--positive);
+}
+
+.tax-code-hint.invalid {
+  color: var(--negative);
+}
+
+/* Baseline actions */
+.baseline-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+}
+
+.baseline-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--figure);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.baseline-btn:hover {
+  background: var(--rule);
+}
+
+.baseline-clear {
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.baseline-clear:hover {
+  border-color: var(--negative);
+  color: var(--negative);
+}
+
+/* Scenario comparison */
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.preset-btn {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.preset-btn:hover {
+  border-color: var(--rule-strong);
+  color: var(--figure);
+}
+
+.preset-btn.active {
+  background: var(--rule);
+  color: var(--figure);
+}
+
+.preset-sub-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.preset-sub-btn {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.preset-sub-btn:hover {
+  border-color: var(--rule-strong);
+  color: var(--figure);
+}
+
+.preset-sub-btn.active {
+  background: var(--rule);
+  color: var(--figure);
+}
+
+.preset-param-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.preset-param-row .input-wrapper {
+  flex: 1;
+  max-width: 180px;
+}
+
+.preset-param-row .input-field {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.5rem 0.35rem 1.5rem;
+}
+
+.preset-apply-btn {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--figure);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.preset-apply-btn:hover {
+  background: var(--rule);
+}
+
+/* % / £ toggle used inside the salary-change preset form. */
+.period-toggle {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.period-toggle-btn {
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.period-toggle-btn.active {
+  background: var(--rule);
+  color: var(--figure);
+}
+
+.breakdown-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.comparison-table th {
+  padding: 0.35rem 0.6rem;
+  text-align: right;
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--rule);
+}
+
+.comparison-table th:first-child {
+  text-align: left;
+}
+
+.comparison-table td {
+  padding: 0.3rem 0.6rem;
+  text-align: right;
+  color: var(--text);
+  border-bottom: 1px solid var(--rule);
+}
+
+.comparison-table td:first-child {
+  text-align: left;
+  color: var(--text-dim);
+}
+
+.comparison-table .delta-positive {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+.comparison-table .delta-negative {
+  color: var(--negative);
+  font-weight: 600;
+}
+
+.comparison-table .delta-neutral {
+  color: var(--text-dim);
+}
+
+.comparison-table .highlight-row td {
+  font-weight: 600;
+  color: var(--figure);
+  border-top: 1px solid var(--rule-strong);
+  padding-top: 0.5rem;
+}
+
+.scenario-summary {
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.scenario-summary strong {
+  color: var(--figure);
+}
