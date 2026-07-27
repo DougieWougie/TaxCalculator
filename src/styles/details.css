@@ -1,0 +1,131 @@
+.detail-sections {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+}
+
+.detail-section + .detail-section {
+  border-top: 1px solid var(--rule);
+}
+
+.detail-section > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.detail-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.detail-section > summary::before {
+  content: '▸';
+  margin-right: 0.5rem;
+  color: var(--text-dim);
+  transition: transform 120ms ease-out;
+  display: inline-block;
+}
+
+.detail-section[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.detail-title {
+  flex: 1;
+  color: var(--text);
+}
+
+.detail-summary {
+  color: var(--figure);
+}
+
+.detail-body {
+  padding: 0 0.9rem 0.9rem;
+}
+
+.detail-label {
+  color: var(--text-dim);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0.6rem 0 0.35rem;
+}
+
+/* Wide tables scroll inside their own container rather than
+   forcing the page to scroll sideways. */
+.detail-table-wrap {
+  overflow-x: auto;
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.detail-table th {
+  text-align: left;
+  padding: 0.3rem 0.5rem 0.3rem 0;
+  color: var(--text-dim);
+  font-weight: 400;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--rule);
+}
+
+.detail-table td {
+  padding: 0.28rem 0.5rem 0.28rem 0;
+}
+
+.detail-table td:last-child,
+.detail-table th:last-child {
+  text-align: right;
+  padding-right: 0;
+}
+
+.detail-table td:nth-child(3) {
+  text-align: right;
+}
+
+.detail-total td {
+  border-top: 1px solid var(--rule);
+  color: var(--figure);
+}
+
+.detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.76rem;
+  margin-top: 0.5rem;
+}
+
+.detail-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 0.16rem 0;
+}
+
+.detail-rows dt {
+  color: var(--text-dim);
+}
+
+.detail-total-row {
+  border-top: 1px solid var(--rule);
+  margin-top: 0.25rem;
+  padding-top: 0.4rem !important;
+}
+
+.detail-total-row dt {
+  color: var(--text) !important;
+}
