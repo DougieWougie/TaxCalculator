@@ -1,0 +1,54 @@
+/* Instrument palette. Dark is the base; light is the override. */
+:root {
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --surface: #0a0c10;
+  --surface-raised: #0d1017;
+  --surface-sheet: #11151d;
+  --rule: #1b2230;
+  --rule-strong: #232b3a;
+
+  --figure: #ffffff;
+  --text: #d7dee8;
+  --text-dim: #5a6675;
+
+  --tax: #f43f5e;
+  --ni: #f59e0b;
+  --pension: #6366f1;
+  --sacrifice: #8b5cf6;
+  --posttax: #64748b;
+  --net: #34d399;
+
+  --glow: 0 0 14px rgba(52, 211, 153, 0.5);
+  --positive: #34d399;
+  --negative: #f43f5e;
+
+  --radius: 5px;
+  --radius-lg: 15px;
+  --gap: 0.75rem;
+}
+
+[data-theme='light'] {
+  --surface: #f4f6f9;
+  --surface-raised: #ffffff;
+  --surface-sheet: #ffffff;
+  --rule: #dde3ec;
+  --rule-strong: #c3ccda;
+
+  --figure: #0b1220;
+  --text: #26313f;
+  --text-dim: #6b7789;
+
+  --tax: #be123c;
+  --ni: #b45309;
+  --pension: #4338ca;
+  --sacrifice: #6d28d9;
+  --posttax: #475569;
+  --net: #047857;
+
+  /* Light mode has no glow — a shadow would read as blur, not emphasis.
+     Emphasis on the live figure comes from weight and colour instead. */
+  --glow: none;
+  --positive: #047857;
+  --negative: #be123c;
+}
