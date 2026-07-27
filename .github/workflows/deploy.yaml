@@ -76,7 +76,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            cd /opt/docker/myapp
+            cd /opt/docker/tax
 
             # Deploy the exact image built for this commit, not whatever
             # "latest" happens to be. The compose file on this host reads
