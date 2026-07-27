@@ -31,9 +31,11 @@ export function snapValue(value: number, options: SnapOptions): number {
     let bestDistance = Infinity;
     for (const point of snapPoints) {
       const distance = Math.abs(clamped - point);
-      if (distance <= tolerance && distance < bestDistance) {
-        best = point;
-        bestDistance = distance;
+      if (distance <= tolerance) {
+        if (distance < bestDistance || (distance === bestDistance && (best === null || point < best))) {
+          best = point;
+          bestDistance = distance;
+        }
       }
     }
     if (best !== null) return clamp(best, min, max);

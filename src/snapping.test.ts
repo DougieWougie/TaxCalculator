@@ -32,6 +32,13 @@ describe('snapValue', () => {
     expect(snapValue(43, opts)).toBe(44);
   });
 
+  it('breaks an exact tie deterministically, regardless of snapPoints order', () => {
+    const a: SnapOptions = { min: 0, max: 100, step: 1, snapPoints: [40, 50], tolerance: 10 };
+    const b: SnapOptions = { min: 0, max: 100, step: 1, snapPoints: [50, 40], tolerance: 10 };
+    expect(snapValue(45, a)).toBe(40);
+    expect(snapValue(45, b)).toBe(40);
+  });
+
   it('does not produce floating point noise', () => {
     expect(snapValue(0.1 + 0.2, { min: 0, max: 10, step: 0.1 })).toBe(0.3);
   });
