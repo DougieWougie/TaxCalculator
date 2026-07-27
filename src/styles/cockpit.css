@@ -1,0 +1,50 @@
+.cockpit {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.cockpit-rail {
+  display: none;
+}
+
+.cockpit-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  /* Room for the collapsed sheet so the last section is never trapped
+     underneath it. */
+  padding-bottom: 5rem;
+}
+
+@media (min-width: 900px) {
+  .cockpit {
+    grid-template-columns: 340px 1fr;
+    align-items: start;
+  }
+
+  .cockpit-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+  }
+
+  .cockpit-canvas {
+    padding-bottom: 0;
+  }
+
+  .cockpit-sheet-slot {
+    display: none;
+  }
+}

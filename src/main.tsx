@@ -7,6 +7,8 @@ import './styles/base.css'
 import './styles/controls.css'
 import './styles/readout.css'
 import './styles/details.css'
+import './styles/cockpit.css'
+import './styles/sheet.css'
 import './index.css'
 
 const rootEl = document.getElementById('root');

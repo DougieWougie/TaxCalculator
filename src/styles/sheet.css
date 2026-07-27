@@ -1,0 +1,47 @@
+.control-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--surface-sheet);
+  border-top: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: 0 -14px 34px rgba(0, 0, 0, 0.45);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.control-sheet-handle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.5rem 1rem 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.control-sheet-grab {
+  width: 30px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--rule-strong);
+}
+
+.control-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1rem 1.25rem;
+  overflow-y: auto;
+}
