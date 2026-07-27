@@ -17,10 +17,14 @@ TypeScript is `strict` with `noUnusedLocals` / `noUnusedParameters` — `npm run
 
 ## Architecture
 
-Single-page React 19 app. Two files hold almost everything:
+Single-page React 19 app ("Instrument" cockpit UI). The calculation engine and the UI are cleanly split:
 
 - `src/taxEngine.ts` — pure-function calculation engine. No React, no DOM, fully unit-tested in `taxEngine.test.ts`. All tax logic lives here and should stay here.
-- `src/App.tsx` — one ~1550-line root component that owns all input state, derives the result via `useMemo(() => calculate(input))`, and renders the UI. Sub-components (`BarRow`, `PeriodToggle`, `SliderSpinner`, `ScenarioComparison`) live in the same file.
+- `src/App.tsx` — owns all input state (including post-tax deductions, which keep a working add/remove editor), derives the result via `useMemo(() => calculate(input))`, and assembles the tree. It renders no markup of its own beyond wiring: `Header`/`Footer`/`DisclaimerBanner`/`ThemeToggle` around a `CockpitShell`, whose `controls` prop is `ControlPanel` and whose children are `Readout`, `BaselineActions`, `DetailSections`, and (when a baseline is saved) `ScenarioComparison`.
+- Each UI concern is its own component under `src/components/`: `ControlPanel` (all inputs, in `control-group` sections), `ValueControl` (slider + text field with snapping, replacing the old per-field slider/spinner), `PeriodSwitch` (the page-level Annual/Monthly toggle), `Readout` (headline figure + waterfall bar), `DetailSections` (collapsible band-breakdown tables), `CockpitShell` / `ControlSheet` (the responsive frame).
+- `CockpitShell` renders `ControlPanel` exactly once, inside a single `ControlSheet`. One CSS breakpoint at 900px decides its presentation — a sticky rail beside the canvas at/above 900px, a fixed draggable bottom sheet below it — there is no separate rail component and no duplicated controls subtree.
+- The Annual/Monthly display setting lives at the page level (`usePeriod`, backed by `useLocalStorage`) rather than per field; `useNumericInput` now only tracks one annual value plus its text draft (`{ raw, annualValue, setRaw, setAnnualValue }`). Display-only period conversion happens at render time via `formatForPeriod` (`src/display.ts`). The period setting is never part of the URL payload — `UrlStatePayload` (`src/urlState.ts`) keeps its original shape so old shared links still decode.
+- Styling lives in `src/styles/*.css`, loaded as separate imports from `main.tsx` — `tokens.css` (the dark-base/light-override colour and spacing tokens), `base.css`, `controls.css`, `readout.css`, `details.css`, `cockpit.css`, `sheet.css`, `chrome.css` (header/footer/disclaimer/theme toggle/copy-link), and `widgets.css` (card/input primitives, tax-code input, baseline actions, scenario comparison). There is no `index.css` and no hardcoded colour literals — everything references a token from `tokens.css`. `JetBrains Mono Variable` is self-hosted via `@fontsource-variable/jetbrains-mono`, so the CSP in `nginx.conf` needed no change for fonts.
 
 ### Per-source calculation in `taxEngine.ts`
 
