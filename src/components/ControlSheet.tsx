@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Bottom sheet for narrow screens.
+ * Responsive controls container.
  *
- * Tap the handle to expand or collapse — that is the primary, always-available
- * path. Dragging is layered on top for pointer devices; if a pointer event
- * never arrives the sheet still works entirely by tap and keyboard.
+ * Below the 900px breakpoint this behaves as a bottom sheet: tap the handle
+ * to expand or collapse — that is the primary, always-available path.
+ * Dragging is layered on top for pointer devices; if a pointer event never
+ * arrives the sheet still works entirely by tap and keyboard.
+ *
+ * Above the breakpoint, CSS alone turns the same markup into a static rail
+ * (see sheet.css) — the handle is hidden and the body is always visible,
+ * regardless of `open`. There is a single instance of `children` in the DOM;
+ * only its presentation changes.
  */
 export function ControlSheet({
   children,
@@ -17,15 +23,32 @@ export function ControlSheet({
   const [open, setOpen] = useState(false);
   const dragStartY = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const handleRef = useRef<HTMLButtonElement>(null);
+
+  // Every path that closes the sheet routes through here so focus always
+  // lands back on the handle rather than on a now-hidden element.
+  const close = () => {
+    setOpen(false);
+    handleRef.current?.focus();
+  };
 
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape') close();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const toggle = () => {
+    if (open) {
+      close();
+    } else {
+      setOpen(true);
+    }
+  };
 
   const handlePointerDown = (event: React.PointerEvent) => {
     dragStartY.current = event.clientY;
@@ -38,12 +61,16 @@ export function ControlSheet({
     const travel = start - event.clientY;
     // Below the threshold this was a tap, not a drag — let onClick handle it.
     if (Math.abs(travel) < 24) return;
-    setOpen(travel > 0);
+    if (travel > 0) {
+      setOpen(true);
+    } else {
+      close();
+    }
   };
 
   return (
     <div
-      className={`control-sheet ${open ? 'open' : ''}`}
+      className="control-sheet"
       ref={panelRef}
       role="dialog"
       aria-label="Controls"
@@ -51,8 +78,9 @@ export function ControlSheet({
     >
       <button
         type="button"
+        ref={handleRef}
         className="control-sheet-handle"
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         aria-expanded={open}
@@ -61,7 +89,7 @@ export function ControlSheet({
         <span className="control-sheet-peek">{open ? 'Close controls' : peek}</span>
       </button>
 
-      <div className="control-sheet-body" hidden={!open}>
+      <div className={`control-sheet-body${open ? ' open' : ''}`}>
         {children}
       </div>
     </div>
