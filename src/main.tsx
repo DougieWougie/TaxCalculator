@@ -5,6 +5,7 @@ import '@fontsource-variable/jetbrains-mono'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/controls.css'
+import './styles/readout.css'
 import './index.css'
 
 const rootEl = document.getElementById('root');

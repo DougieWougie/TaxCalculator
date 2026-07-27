@@ -1,0 +1,94 @@
+.readout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+}
+
+.readout-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap);
+}
+
+.readout-delta {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.readout-delta.up {
+  color: var(--positive);
+  text-shadow: var(--glow);
+}
+
+.readout-delta.down {
+  color: var(--negative);
+}
+
+.readout-figure {
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 1;
+  text-shadow: var(--glow);
+}
+
+.readout-sub {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+
+.readout-bar {
+  display: flex;
+  gap: 1.5px;
+  height: 6px;
+  margin-top: 0.4rem;
+}
+
+.readout-bar-seg {
+  display: block;
+  height: 100%;
+  border-radius: 1px;
+  transition: width 180ms ease-out;
+}
+
+.readout-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.3rem;
+}
+
+.readout-legend-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap);
+  font-size: 0.76rem;
+  padding: 0.12rem 0;
+}
+
+.readout-legend-row dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-dim);
+}
+
+.readout-swatch {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+
+.seg-tax { background: var(--tax); }
+.seg-ni { background: var(--ni); }
+.seg-pension { background: var(--pension); }
+.seg-sacrifice { background: var(--sacrifice); }
+.seg-posttax { background: var(--posttax); }
+.seg-net { background: var(--net); }
+
+.readout-legend-row dd.figure {
+  color: var(--text);
+}
