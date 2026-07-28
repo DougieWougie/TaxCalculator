@@ -16,22 +16,31 @@ vi.mock('recharts', async () => {
 describe('App Tabs', () => {
   it('renders Overview tab by default and switches tabs correctly', () => {
     render(<App />);
+
+    const isVisible = (el: HTMLElement) => {
+      let current: HTMLElement | null = el;
+      while(current) {
+        if(current.style && current.style.display === 'none') return false;
+        current = current.parentElement;
+      }
+      return true;
+    };
     
     // Overview tab content should be visible (e.g. Effective Rates)
-    expect(screen.getByText('Effective Tax Rate')).toBeDefined();
+    expect(isVisible(screen.getByText('Effective Tax Rate'))).toBe(true);
     
     // Tax Details tab content should NOT be visible
-    expect(screen.queryByText('Income Tax Breakdown')).toBeNull();
+    expect(isVisible(screen.getByText('Income Tax Breakdown'))).toBe(false);
 
     // Click on Tax Details tab
     const taxTab = screen.getByRole('button', { name: 'Tax Details' });
     fireEvent.click(taxTab);
     
     // Now Tax Breakdown should be visible
-    expect(screen.getByText('Income Tax Breakdown')).toBeDefined();
+    expect(isVisible(screen.getByText('Income Tax Breakdown'))).toBe(true);
     
     // And Overview content should be hidden
-    expect(screen.queryByText('Effective Tax Rate')).toBeNull();
+    expect(isVisible(screen.getByText('Effective Tax Rate'))).toBe(false);
 
     // Provide a pension contribution so PensionSummaryCard renders its projection
     const pensionInput = screen.getByLabelText('Pension Contribution (salary sacrifice)');
@@ -42,17 +51,17 @@ describe('App Tabs', () => {
     fireEvent.click(pensionTab);
 
     // Pension projection should be visible
-    expect(screen.getByText('Pension Projection')).toBeDefined();
+    expect(isVisible(screen.getByText('Pension Projection'))).toBe(true);
     // Tax Breakdown should be hidden
-    expect(screen.queryByText('Income Tax Breakdown')).toBeNull();
+    expect(isVisible(screen.getByText('Income Tax Breakdown'))).toBe(false);
 
     // Click on Scenarios tab
     const scenariosTab = screen.getByRole('button', { name: 'Scenarios' });
     fireEvent.click(scenariosTab);
 
     // Baseline Actions should be visible
-    expect(screen.getByText('Save as Baseline')).toBeDefined();
+    expect(isVisible(screen.getByText('Save as Baseline'))).toBe(true);
     // Pension should be hidden
-    expect(screen.queryByText('Pension Projection')).toBeNull();
+    expect(isVisible(screen.getByText('Pension Projection'))).toBe(false);
   });
 });

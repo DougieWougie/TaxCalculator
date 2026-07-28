@@ -269,65 +269,57 @@ export default function App() {
               </button>
             </div>
 
-            {activeTab === 'overview' && (
-              <>
-                {hasMilitaryPension && (
-                  <MilitarySplitStats
-                    netAnnualIncome={result.netAnnualIncome}
-                    militaryPension={result.militaryPension}
-                    militaryPensionTax={result.militaryPensionTax}
-                  />
-                )}
-                <IncomeDeductionsCard
-                  result={result}
-                  hasMilitaryPension={hasMilitaryPension}
-                  showMonthly={plTableShowMonthly}
-                  onShowMonthlyChange={setPlTableShowMonthly}
-                  totalGross={totalGross}
+            <div style={{ display: activeTab === 'overview' ? 'flex' : 'none', flexDirection: 'column', gap: '1.5rem' }}>
+              {hasMilitaryPension && (
+                <MilitarySplitStats
+                  netAnnualIncome={result.netAnnualIncome}
+                  militaryPension={result.militaryPension}
+                  militaryPensionTax={result.militaryPensionTax}
                 />
-                <EffectiveRatesCard result={result} />
-              </>
-            )}
+              )}
+              <IncomeDeductionsCard
+                result={result}
+                hasMilitaryPension={hasMilitaryPension}
+                showMonthly={plTableShowMonthly}
+                onShowMonthlyChange={setPlTableShowMonthly}
+                totalGross={totalGross}
+              />
+              <EffectiveRatesCard result={result} />
+            </div>
 
-            {activeTab === 'tax' && (
-              <>
-                <TaxBreakdownCard result={result} />
-                <NiBreakdownCard result={result} hasMilitaryPension={hasMilitaryPension} />
-                <PostTaxDeductionsSummaryCard result={result} />
-              </>
-            )}
+            <div style={{ display: activeTab === 'tax' ? 'flex' : 'none', flexDirection: 'column', gap: '1.5rem' }}>
+              <TaxBreakdownCard result={result} />
+              <NiBreakdownCard result={result} hasMilitaryPension={hasMilitaryPension} />
+              <PostTaxDeductionsSummaryCard result={result} />
+            </div>
 
-            {activeTab === 'pension' && (
-              <>
-                <PensionSummaryCard
-                  result={result}
-                  pensionContributionAnnual={pensionContributionInput.annualValue}
+            <div style={{ display: activeTab === 'pension' ? 'flex' : 'none', flexDirection: 'column', gap: '1.5rem' }}>
+              <PensionSummaryCard
+                result={result}
+                pensionContributionAnnual={pensionContributionInput.annualValue}
+              />
+            </div>
+
+            <div style={{ display: activeTab === 'scenarios' ? 'flex' : 'none', flexDirection: 'column', gap: '1.5rem' }}>
+              <BaselineActions
+                hasBaseline={!!scenario.baseline}
+                onSave={scenario.saveBaseline}
+                onClear={scenario.clearBaseline}
+              />
+              {scenario.baseline && (
+                <ScenarioComparison
+                  baseline={scenario.baseline}
+                  scenarioResult={scenario.scenarioResult}
+                  scenarioDiff={scenario.scenarioDiff}
+                  scenarioPreset={scenario.scenarioPreset}
+                  onSelectPreset={scenario.setScenarioPreset}
+                  onApplyOptimise={scenario.applyOptimise}
+                  onApplySalaryChange={scenario.applySalaryChange}
+                  onApplySacrifice={scenario.applySacrifice}
+                  optimisationTargets={scenario.optimisationTargets}
                 />
-              </>
-            )}
-
-            {activeTab === 'scenarios' && (
-              <>
-                <BaselineActions
-                  hasBaseline={!!scenario.baseline}
-                  onSave={scenario.saveBaseline}
-                  onClear={scenario.clearBaseline}
-                />
-                {scenario.baseline && (
-                  <ScenarioComparison
-                    baseline={scenario.baseline}
-                    scenarioResult={scenario.scenarioResult}
-                    scenarioDiff={scenario.scenarioDiff}
-                    scenarioPreset={scenario.scenarioPreset}
-                    onSelectPreset={scenario.setScenarioPreset}
-                    onApplyOptimise={scenario.applyOptimise}
-                    onApplySalaryChange={scenario.applySalaryChange}
-                    onApplySacrifice={scenario.applySacrifice}
-                    optimisationTargets={scenario.optimisationTargets}
-                  />
-                )}
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
