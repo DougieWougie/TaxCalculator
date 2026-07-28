@@ -39,6 +39,8 @@ export default function App() {
     false
   );
   const showDisclaimer = !disclaimerDismissed;
+  
+  const [activeTab, setActiveTab] = useState<'overview' | 'tax' | 'pension' | 'scenarios'>('overview');
 
   const dismissDisclaimer = useCallback(() => {
     setDisclaimerDismissed(true);
@@ -239,53 +241,91 @@ export default function App() {
           <div className="results-column">
             <SummaryHero netAnnualIncome={result.netAnnualIncome} />
 
-            <BaselineActions
-              hasBaseline={!!scenario.baseline}
-              onSave={scenario.saveBaseline}
-              onClear={scenario.clearBaseline}
-            />
+            <div className="tabs-container">
+              <button 
+                className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('overview')}
+              >
+                Overview
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'tax' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('tax')}
+              >
+                Tax Details
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'pension' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('pension')}
+              >
+                Pension
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'scenarios' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('scenarios')}
+              >
+                Scenarios
+              </button>
+            </div>
 
-            {hasMilitaryPension && (
-              <MilitarySplitStats
-                netAnnualIncome={result.netAnnualIncome}
-                militaryPension={result.militaryPension}
-                militaryPensionTax={result.militaryPensionTax}
-              />
+            {activeTab === 'overview' && (
+              <>
+                {hasMilitaryPension && (
+                  <MilitarySplitStats
+                    netAnnualIncome={result.netAnnualIncome}
+                    militaryPension={result.militaryPension}
+                    militaryPensionTax={result.militaryPensionTax}
+                  />
+                )}
+                <IncomeDeductionsCard
+                  result={result}
+                  hasMilitaryPension={hasMilitaryPension}
+                  showMonthly={plTableShowMonthly}
+                  onShowMonthlyChange={setPlTableShowMonthly}
+                  totalGross={totalGross}
+                />
+                <EffectiveRatesCard result={result} />
+              </>
             )}
 
-            <IncomeDeductionsCard
-              result={result}
-              hasMilitaryPension={hasMilitaryPension}
-              showMonthly={plTableShowMonthly}
-              onShowMonthlyChange={setPlTableShowMonthly}
-              totalGross={totalGross}
-            />
+            {activeTab === 'tax' && (
+              <>
+                <TaxBreakdownCard result={result} />
+                <NiBreakdownCard result={result} hasMilitaryPension={hasMilitaryPension} />
+                <PostTaxDeductionsSummaryCard result={result} />
+              </>
+            )}
 
-            <EffectiveRatesCard result={result} />
+            {activeTab === 'pension' && (
+              <>
+                <PensionSummaryCard
+                  result={result}
+                  pensionContributionAnnual={pensionContributionInput.annualValue}
+                />
+              </>
+            )}
 
-            <TaxBreakdownCard result={result} />
-
-            <NiBreakdownCard result={result} hasMilitaryPension={hasMilitaryPension} />
-
-            <PensionSummaryCard
-              result={result}
-              pensionContributionAnnual={pensionContributionInput.annualValue}
-            />
-
-            <PostTaxDeductionsSummaryCard result={result} />
-
-            {scenario.baseline && (
-              <ScenarioComparison
-                baseline={scenario.baseline}
-                scenarioResult={scenario.scenarioResult}
-                scenarioDiff={scenario.scenarioDiff}
-                scenarioPreset={scenario.scenarioPreset}
-                onSelectPreset={scenario.setScenarioPreset}
-                onApplyOptimise={scenario.applyOptimise}
-                onApplySalaryChange={scenario.applySalaryChange}
-                onApplySacrifice={scenario.applySacrifice}
-                optimisationTargets={scenario.optimisationTargets}
-              />
+            {activeTab === 'scenarios' && (
+              <>
+                <BaselineActions
+                  hasBaseline={!!scenario.baseline}
+                  onSave={scenario.saveBaseline}
+                  onClear={scenario.clearBaseline}
+                />
+                {scenario.baseline && (
+                  <ScenarioComparison
+                    baseline={scenario.baseline}
+                    scenarioResult={scenario.scenarioResult}
+                    scenarioDiff={scenario.scenarioDiff}
+                    scenarioPreset={scenario.scenarioPreset}
+                    onSelectPreset={scenario.setScenarioPreset}
+                    onApplyOptimise={scenario.applyOptimise}
+                    onApplySalaryChange={scenario.applySalaryChange}
+                    onApplySacrifice={scenario.applySacrifice}
+                    optimisationTargets={scenario.optimisationTargets}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>
