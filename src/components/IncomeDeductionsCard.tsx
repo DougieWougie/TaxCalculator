@@ -33,7 +33,8 @@ export function IncomeDeductionsCard({
           />
         </span>
       </div>
-      <table className={`pl-table ${showMonthly ? 'hide-annual' : 'hide-monthly'}`}>
+      <div className="pl-table-wrapper">
+        <table className={`pl-table ${showMonthly ? 'hide-annual' : 'hide-monthly'}`}>
         <thead>
           <tr>
             <th></th>
@@ -110,6 +111,7 @@ export function IncomeDeductionsCard({
           </tr>
         </tbody>
       </table>
+      </div>
 
       <div style={{ marginTop: '1.25rem' }}>
         <div className="bar-chart">
