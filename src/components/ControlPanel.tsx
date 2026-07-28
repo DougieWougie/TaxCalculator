@@ -67,6 +67,7 @@ export function ControlPanel({
   onDeductionRemove: (id: number) => void;
 }) {
   const salaryMax = Math.max(200000, Math.ceil(annualSalary / 10000) * 10000);
+  const militaryPensionMax = Math.max(100000, Math.ceil(militaryPension / 10000) * 10000);
 
   return (
     <>
@@ -178,7 +179,7 @@ export function ControlPanel({
               value={militaryPension}
               onChange={onMilitaryPensionChange}
               min={0}
-              max={100000}
+              max={militaryPensionMax}
               step={100}
               prefix="£"
             />

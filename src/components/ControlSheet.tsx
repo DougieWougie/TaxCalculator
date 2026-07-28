@@ -72,9 +72,7 @@ export function ControlSheet({
     <div
       className="control-sheet"
       ref={panelRef}
-      role="dialog"
       aria-label="Controls"
-      aria-expanded={open}
     >
       <button
         type="button"

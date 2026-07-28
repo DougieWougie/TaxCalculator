@@ -176,7 +176,7 @@ export default function App() {
       <Header />
 
       <CockpitShell controls={controls}>
-        <Readout result={result} period={period} diff={scenario.scenarioDiff} />
+        <Readout result={result} period={period} diff={scenario.liveDiff} />
 
         <BaselineActions
           hasBaseline={!!scenario.baseline}

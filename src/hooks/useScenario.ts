@@ -27,6 +27,14 @@ export function useScenario(currentInput: CalculationInput, currentResult: Calcu
     [baseline, scenarioResult]
   );
 
+  // Live delta: baseline vs the CURRENT input, updated as the user drags
+  // controls. Distinct from scenarioDiff, which compares baseline vs the
+  // applied preset scenario and is only populated when a preset is chosen.
+  const liveDiff: ScenarioDiff | null = useMemo(
+    () => (baseline ? diffResults(baseline.result, currentResult) : null),
+    [baseline, currentResult]
+  );
+
   const optimisationTargets = useMemo(
     () => (baseline ? getOptimisationTargets(baseline.input, baseline.result) : []),
     [baseline]
@@ -84,6 +92,7 @@ export function useScenario(currentInput: CalculationInput, currentResult: Calcu
     scenarioPreset,
     scenarioResult,
     scenarioDiff,
+    liveDiff,
     optimisationTargets,
     setScenarioPreset,
     saveBaseline,

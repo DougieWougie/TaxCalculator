@@ -1,4 +1,4 @@
-import { formatPercent, type CalculationResult, type TaxBreakdownBand } from '../taxEngine';
+import { formatCurrency, formatPercent, type CalculationResult, type TaxBreakdownBand } from '../taxEngine';
 import { formatForPeriod, type DisplayPeriod } from '../display';
 
 function BandTable({
@@ -74,6 +74,11 @@ export function DetailSections({
       <Section title="Income tax" summary={formatForPeriod(result.incomeTax, period)}>
         {result.usingTaxCodes ? (
           <>
+            {result.employmentTaxBreakdown.length === 0 && result.militaryTaxBreakdown.length === 0 && (
+              <p className="detail-label">
+                No tax is due at this income · {formatForPeriod(result.incomeTax, period)}
+              </p>
+            )}
             {result.employmentTaxBreakdown.length > 0 && (
               <>
                 <p className="detail-label">
@@ -176,10 +181,10 @@ export function DetailSections({
 
       <Section
         title="Allowances"
-        summary={formatForPeriod(result.personalAllowance, period)}
+        summary={formatCurrency(result.personalAllowance)}
       >
         <dl className="detail-rows">
-          <div><dt>Personal allowance</dt><dd className="figure">{formatForPeriod(result.personalAllowance, period)}</dd></div>
+          <div><dt>Personal allowance</dt><dd className="figure">{formatCurrency(result.personalAllowance)}</dd></div>
           <div><dt>Taxable income</dt><dd className="figure">{formatForPeriod(result.totalTaxableIncome, period)}</dd></div>
           <div><dt>Effective rate</dt><dd className="figure">{formatPercent(result.effectiveTaxRate)}</dd></div>
           <div><dt>Marginal rate</dt><dd className="figure">{formatPercent(result.marginalTaxRate)}</dd></div>

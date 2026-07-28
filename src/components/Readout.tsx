@@ -21,10 +21,13 @@ export function Readout({
         <span className="label">Take-home · {period}</span>
         {diff && (
           <span
-            className={`readout-delta ${diff.netAnnualIncome >= 0 ? 'up' : 'down'}`}
+            className={`readout-delta ${
+              diff.netAnnualIncome > 0 ? 'up' : diff.netAnnualIncome < 0 ? 'down' : 'neutral'
+            }`}
             aria-label={`Change versus baseline: ${formatForPeriod(diff.netAnnualIncome, period)}`}
           >
-            {diff.netAnnualIncome >= 0 ? '▲' : '▼'} {formatForPeriod(Math.abs(diff.netAnnualIncome), period)}
+            {diff.netAnnualIncome > 0 ? '▲ ' : diff.netAnnualIncome < 0 ? '▼ ' : ''}
+            {formatForPeriod(Math.abs(diff.netAnnualIncome), period)}
           </span>
         )}
       </div>

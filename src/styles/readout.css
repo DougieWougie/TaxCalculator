@@ -29,6 +29,10 @@
   color: var(--negative);
 }
 
+.readout-delta.neutral {
+  color: var(--text-dim);
+}
+
 .readout-figure {
   font-size: clamp(2rem, 7vw, 3rem);
   line-height: 1;

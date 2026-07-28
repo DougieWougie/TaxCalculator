@@ -111,7 +111,7 @@ export function ScenarioComparison({
               </button>
             ))
           ) : (
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0.25rem' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', padding: '0.25rem' }}>
               Already in the lowest available tax band
             </span>
           )}
@@ -247,7 +247,7 @@ export function ScenarioComparison({
       )}
 
       {!scenarioResult && (
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
           Choose a preset above to generate a comparison scenario.
         </p>
       )}
