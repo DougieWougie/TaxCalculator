@@ -31,19 +31,19 @@ describe('PensionSummaryCard', () => {
     scottishTaxRate: false,
   } as any;
 
-  it('renders nothing when there is no total pension pot and no current pot', () => {
+  it('renders even when there is no total pension pot and no current pot', () => {
     const emptyResult = { ...mockResult, totalPensionPot: 0 };
     const { container } = render(
       <PensionSummaryCard result={emptyResult} pensionContributionAnnual={0} />
     );
-    expect(container.firstChild).toBeNull();
+    expect(container.firstChild).not.toBeNull();
   });
 
   it('renders correctly when there is a pension pot', () => {
     render(<PensionSummaryCard result={mockResult} pensionContributionAnnual={3000} />);
     
-    expect(screen.getByText('Pension Projection')).not.toBeNull();
-    expect(screen.getByText('Your Contribution')).not.toBeNull();
+    expect(screen.getAllByText('Pension Projection').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Your Contribution').length).toBeGreaterThan(0);
     // 3000 formatted usually includes currency symbol, we just check the number is visible somehow,
     // but the exact format might depend on `formatCurrency`.
   });

@@ -43,7 +43,7 @@ export function PensionSummaryCard({
     return data;
   }, [pot, age, retAge, growthRate, result.totalPensionPot]);
 
-  if (result.totalPensionPot <= 0 && !currentPot) return null;
+
 
   const niSaving =
     result.taxableEmploymentIncome >= 50_270
