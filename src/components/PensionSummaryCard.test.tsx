@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
 import { PensionSummaryCard } from './PensionSummaryCard';
-import type { CalculationResult } from '../taxEngine';
+
 
 // Mock Recharts ResponsiveContainer to prevent size calculation errors in JSDOM
 vi.mock('recharts', async () => {
@@ -16,8 +15,7 @@ vi.mock('recharts', async () => {
 });
 
 describe('PensionSummaryCard', () => {
-  const mockResult: CalculationResult = {
-    grossIncome: 60000,
+  const mockResult = {
     taxableEmploymentIncome: 60000,
     incomeTax: 10000,
     nationalInsurance: 5000,
@@ -31,7 +29,7 @@ describe('PensionSummaryCard', () => {
     studentLoanRepayment: 0,
     militaryPensionTax: 0,
     scottishTaxRate: false,
-  };
+  } as any;
 
   it('renders nothing when there is no total pension pot and no current pot', () => {
     const emptyResult = { ...mockResult, totalPensionPot: 0 };
