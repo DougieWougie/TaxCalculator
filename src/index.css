@@ -264,12 +264,89 @@ body {
   background: var(--accent-glow);
 }
 
+/* Sticky net-pay bar — mobile only, keeps the result visible while editing inputs */
+.mobile-summary-bar {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .mobile-summary-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    /* More opaque than --glass-bg: scrolling content behind it must not
+       compete with the take-home figure */
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 16px -4px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .mobile-summary-primary,
+  .mobile-summary-secondary {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .mobile-summary-secondary {
+    text-align: right;
+  }
+
+  .mobile-summary-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .mobile-summary-primary .mobile-summary-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobile-summary-secondary .mobile-summary-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Clear the fixed bar so the footer is never trapped underneath it */
+  .app-container {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Theme Toggle */
 .theme-toggle-wrapper {
   position: fixed;
   top: 1.25rem;
   right: 1.25rem;
   z-index: 100;
+}
+
+/* Below the two-column breakpoint the fixed toggle overlaps the header, so
+   put it back in the flow above the container. */
+@media (max-width: 860px) {
+  .theme-toggle-wrapper {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem 0.75rem 0;
+  }
 }
 
 .theme-toggle {
@@ -537,7 +614,8 @@ body {
 }
 
 .preset-param-row .input-field {
-  font-size: 0.85rem;
+  /* Must stay at 16px — anything smaller makes iOS Safari zoom the viewport on focus */
+  font-size: 1rem;
   padding: 0.4rem 0.5rem;
 }
 
@@ -639,16 +717,26 @@ body {
   }
 }
 
+/* Grid and flex items default to min-width:auto, so wide non-wrapping content
+   (region buttons, tables) stretches the column past the viewport. */
+.main-grid > *,
+.input-column > *,
+.results-column > * {
+  min-width: 0;
+}
+
 .input-column {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 
 .results-column {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 
 /* Tax region toggle */
@@ -663,6 +751,7 @@ body {
 
 .region-btn {
   flex: 1;
+  min-width: 0;
   padding: 0.75rem 1rem;
   border: none;
   background: transparent;
@@ -693,6 +782,21 @@ body {
 .region-btn:not(.active):hover {
   color: var(--text-primary);
   background: var(--accent-glow);
+}
+
+/* Two fields side by side, stacking when there isn't room */
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 420px) {
+  .field-pair {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }
 
 /* Input groups */
@@ -782,22 +886,39 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* The input itself is a transparent 44px-tall hit area (touch-target minimum);
+   the visible 6px track is drawn by the track pseudo-elements. */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   flex: 1;
+  min-width: 0;
+  height: 44px;
+  background: transparent;
+  outline: none;
+  touch-action: pan-y;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 3px;
   background: var(--border-color);
-  outline: none;
+  transition: background 0.2s;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-color);
   transition: background 0.2s;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
+  margin-top: -11px; /* centres the 28px thumb on the 6px track */
   border-radius: 50%;
   background: var(--gradient-accent);
   cursor: pointer;
@@ -805,18 +926,28 @@ input[type="range"]::-webkit-slider-thumb {
   transition: transform 0.2s;
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-}
-
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--gradient-accent);
   cursor: pointer;
   border: none;
   box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--ring);
+}
+
+input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: var(--ring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
 }
 
 /* Checkbox */
@@ -1252,8 +1383,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .deduction-remove {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: 2px solid var(--border-color);
   background: var(--bg-input);
@@ -1276,6 +1407,23 @@ input[type="range"]::-moz-range-thumb {
   border-color: var(--danger);
   color: var(--danger);
   background: rgba(239, 68, 68, 0.1);
+}
+
+/* Name + amount + remove won't fit on one line on a phone — stack them */
+@media (max-width: 480px) {
+  .deduction-row {
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .deduction-name {
+    flex: 1 0 100%;
+  }
+
+  .deduction-amount-wrapper {
+    flex: 1;
+    width: auto;
+  }
 }
 
 .add-deduction-btn {
@@ -1433,7 +1581,7 @@ input[type="range"]::-moz-range-thumb {
 /* Responsive */
 @media (max-width: 640px) {
   .app-container {
-    padding: 1rem 0.75rem 3rem;
+    padding: 1rem 0.75rem calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .header h1 {
@@ -1454,6 +1602,12 @@ input[type="range"]::-moz-range-thumb {
 
   .card {
     padding: 1.25rem;
+    min-width: 0;
+  }
+
+  .region-btn {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
   }
 
   .breakdown-table {

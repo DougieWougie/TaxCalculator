@@ -23,6 +23,7 @@ import { IncomeCard } from './components/IncomeCard';
 import { MilitaryPensionCard } from './components/MilitaryPensionCard';
 import { PostTaxDeductionsCard } from './components/PostTaxDeductionsCard';
 import { SummaryHero } from './components/SummaryHero';
+import { MobileSummaryBar } from './components/MobileSummaryBar';
 import { BaselineActions } from './components/BaselineActions';
 import { MilitarySplitStats } from './components/MilitarySplitStats';
 import { IncomeDeductionsCard } from './components/IncomeDeductionsCard';
@@ -332,6 +333,8 @@ export default function App() {
 
         <Footer />
       </div>
+
+      <MobileSummaryBar netAnnualIncome={result.netAnnualIncome} />
     </>
   );
 }

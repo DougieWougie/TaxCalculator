@@ -98,7 +98,7 @@ export function PensionSummaryCard({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        <div className="field-pair">
           <div className="input-group">
             <label className="input-label">Current Age</label>
             <div className="input-wrapper">
