@@ -20,7 +20,7 @@ export const DEFAULTS: UrlStatePayload = {
   pensionContribution: '0',
   employerPension: '0',
   militaryPension: '0',
-  hasMilitaryPension: false,
+  hasMilitaryPension: true,
   taxRegion: 'scottish',
   employmentTaxCode: '',
   militaryPensionTaxCode: '',
