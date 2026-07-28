@@ -199,6 +199,16 @@ export default function App() {
           <div className="input-column">
             <RegionCard taxRegion={taxRegion} onChange={setTaxRegion} />
 
+            <MilitaryPensionCard
+              hasMilitaryPension={hasMilitaryPension}
+              onHasMilitaryPensionChange={setHasMilitaryPension}
+              militaryPension={militaryPension}
+              onMilitaryPensionChange={setMilitaryPension}
+              militaryPensionTaxCode={militaryPensionTaxCode}
+              onMilitaryPensionTaxCodeChange={setMilitaryPensionTaxCode}
+              milTaxCodeInfo={milTaxCodeInfo}
+            />
+
             <IncomeCard
               annualSalary={annualSalary}
               onAnnualSalaryChange={setAnnualSalary}
@@ -215,16 +225,6 @@ export default function App() {
               onEmploymentTaxCodeChange={setEmploymentTaxCode}
               empTaxCodeInfo={empTaxCodeInfo}
               taxRegion={taxRegion}
-            />
-
-            <MilitaryPensionCard
-              hasMilitaryPension={hasMilitaryPension}
-              onHasMilitaryPensionChange={setHasMilitaryPension}
-              militaryPension={militaryPension}
-              onMilitaryPensionChange={setMilitaryPension}
-              militaryPensionTaxCode={militaryPensionTaxCode}
-              onMilitaryPensionTaxCodeChange={setMilitaryPensionTaxCode}
-              milTaxCodeInfo={milTaxCodeInfo}
             />
 
             <PostTaxDeductionsCard

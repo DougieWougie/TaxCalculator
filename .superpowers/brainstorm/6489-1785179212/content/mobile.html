@@ -1,0 +1,107 @@
+<h2>Mobile: the cockpit's weak spot</h2>
+<p class="subtitle">A fixed control rail has no room on a phone. Both options keep the rule "the number you're watching never leaves the screen while you fiddle" — they differ in where the controls go. Shown in the Instrument style you picked.</p>
+
+<style>
+  .ph-wrap { display: flex; gap: 26px; flex-wrap: wrap; justify-content: center; }
+  .ph { width: 232px; height: 430px; border-radius: 24px; background: #0a0c10; border: 5px solid #1e242f;
+        position: relative; overflow: hidden; font-family: ui-monospace, "SF Mono", Menlo, monospace; color: #d7dee8; }
+  .ph-lbl { font-size: 7.5px; letter-spacing: .16em; text-transform: uppercase; color: #5a6675; }
+  .ph-num { font-size: 30px; color: #fff; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .ph-glow { color: #34d399; text-shadow: 0 0 12px rgba(52,211,153,.55); }
+  .ph-top { padding: 11px 13px 10px; border-bottom: 1px solid #1b2230; background: #0d1017; }
+  .ph-body { padding: 11px 13px; display: flex; flex-direction: column; gap: 9px; }
+  .ph-box { border: 1px solid #1b2230; border-radius: 5px; padding: 8px; background: #0d1017; }
+  .ph-row { display: flex; justify-content: space-between; font-size: 9px; padding: 2px 0; font-variant-numeric: tabular-nums; }
+  .ph-bar { display:flex; height: 4px; gap: 1.5px; margin-bottom: 6px; }
+  .ph-bar i { display:block; height:100%; }
+  .ph-sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #11151d; border-top: 1px solid #232b3a;
+              border-radius: 15px 15px 0 0; padding: 8px 13px 13px; box-shadow: 0 -14px 34px rgba(0,0,0,.6); }
+  .ph-grab { width: 30px; height: 3px; border-radius: 3px; background: #3a4457; margin: 0 auto 9px; }
+  .ph-slider { height: 3px; border-radius: 3px; background: #2a3346; position: relative; margin: 11px 0 4px; }
+  .ph-slider i { position: absolute; left:0; top:0; height:100%; width: 58%; background: #6366f1; border-radius: 3px; }
+  .ph-slider::after { content:''; position:absolute; left: 58%; top: -4px; width: 11px; height: 11px; border-radius: 50%; background: #fff; }
+  .ph-tabbar { position:absolute; left:0; right:0; bottom:0; display:flex; border-top: 1px solid #1b2230; background:#0d1017; }
+  .ph-tabbar span { flex:1; text-align:center; padding: 9px 0; font-size: 7.5px; letter-spacing:.12em; text-transform:uppercase; color:#5a6675 }
+  .ph-tabbar span.on { color:#34d399; box-shadow: inset 0 2px 0 #34d399; }
+  .ph-cap { text-align:center; font-size: 11px; opacity:.72; margin-top: 9px; max-width: 232px; }
+</style>
+
+<div class="options">
+
+  <div class="option" data-choice="sheet" onclick="toggleSelect(this)" style="display:block">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Controls in a drag-up sheet</h3>
+      <p style="font-size:12px">Readout owns the screen. Controls live in a sheet docked at the bottom — it peeks with the control you last touched, and drags up to reveal the rest. You adjust with your thumb and watch the number above your hand.</p>
+      <div class="ph-wrap" style="margin-top:12px">
+        <div>
+          <div class="ph">
+            <div class="ph-top">
+              <div style="display:flex;justify-content:space-between"><span class="ph-lbl">Take-home / mo</span><span class="ph-lbl">SCT</span></div>
+              <div class="ph-num" style="margin-top:5px">£3,412<span class="ph-glow" style="font-size:11px"> ▲46</span></div>
+              <div class="ph-lbl" style="margin-top:4px">eff 24.8% · marg 42%</div>
+            </div>
+            <div class="ph-body">
+              <div class="ph-box">
+                <div class="ph-bar"><i style="width:58%;background:#6366f1"></i><i style="width:19%;background:#f43f5e"></i><i style="width:9%;background:#f59e0b"></i><i style="width:14%;background:#34d399"></i></div>
+                <div class="ph-row"><span style="color:#5a6675">GROSS</span><span>58,000</span></div>
+                <div class="ph-row"><span style="color:#5a6675">TAX</span><span style="color:#f43f5e">−11,022</span></div>
+                <div class="ph-row"><span style="color:#5a6675">NI</span><span style="color:#f59e0b">−3,194</span></div>
+                <div class="ph-row"><span style="color:#5a6675">NET</span><span class="ph-glow">40,944</span></div>
+              </div>
+              <div class="ph-box" style="opacity:.4"><div class="ph-row"><span>▸ BANDS</span><span></span></div></div>
+            </div>
+            <div class="ph-sheet">
+              <div class="ph-grab"></div>
+              <div style="display:flex;justify-content:space-between"><span class="ph-lbl">Pension</span><span style="font-size:12px;color:#fff">6.0%</span></div>
+              <div class="ph-slider"><i></i></div>
+              <div class="ph-lbl" style="text-align:center;margin-top:7px">drag up for salary · sacrifice · code</div>
+            </div>
+          </div>
+          <p class="ph-cap">Thumb on the sheet, eyes on the number. One control at a time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="stack" onclick="toggleSelect(this)" style="display:block">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Plain stack with a sticky readout</h3>
+      <p style="font-size:12px">No sheet, no gesture. The vitals bar sticks to the top and shrinks as you scroll; controls and detail are one ordinary scrolling column beneath it, with a tab bar to jump between Breakdown, Bands and Scenarios.</p>
+      <div class="ph-wrap" style="margin-top:12px">
+        <div>
+          <div class="ph">
+            <div class="ph-top" style="padding:8px 13px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span class="ph-num" style="font-size:19px">£3,412</span>
+                <span class="ph-glow" style="font-size:10px">▲46</span>
+                <span class="ph-lbl">24.8%</span>
+              </div>
+            </div>
+            <div class="ph-body">
+              <div class="ph-box">
+                <div class="ph-lbl">Salary</div>
+                <div style="font-size:13px;color:#fff;margin-top:3px">£58,000</div>
+              </div>
+              <div class="ph-box">
+                <div style="display:flex;justify-content:space-between"><span class="ph-lbl">Pension</span><span style="font-size:11px;color:#fff">6.0%</span></div>
+                <div class="ph-slider"><i></i></div>
+              </div>
+              <div class="ph-box">
+                <div class="ph-bar"><i style="width:58%;background:#6366f1"></i><i style="width:19%;background:#f43f5e"></i><i style="width:9%;background:#f59e0b"></i><i style="width:14%;background:#34d399"></i></div>
+                <div class="ph-row"><span style="color:#5a6675">TAX</span><span style="color:#f43f5e">−11,022</span></div>
+                <div class="ph-row"><span style="color:#5a6675">NET</span><span class="ph-glow">40,944</span></div>
+              </div>
+            </div>
+            <div class="ph-tabbar"><span class="on">Break</span><span>Bands</span><span>NI</span><span>Scen</span></div>
+          </div>
+          <p class="ph-cap">Conventional, robust, nothing to discover. Slider and number can end up far apart.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:14px">I'd take <b>A</b> — it's the only one that preserves the thing you said you do, watching numbers move while you adjust, on a screen too small to show both otherwise. It costs a drag gesture to build and needs a non-gesture fallback (tap the sheet header to expand) for accessibility. <b>B</b> is safer and cheaper but on a phone you'll often be dragging a slider whose effect has scrolled off.</p>

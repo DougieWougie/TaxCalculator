@@ -1,5 +1,5 @@
 /**
- * UK Pension & Salary Tax Calculation Engine
+ * UK Ex-Military Pension & Salary Tax Calculation Engine
  * Tax Year 2025-26
  *
  * Sources:

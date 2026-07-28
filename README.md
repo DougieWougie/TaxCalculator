@@ -1,4 +1,4 @@
-# UK Pension & Salary Calculator
+# UK Ex-Military Pension & Salary Calculator
 
 A web application that calculates take-home pay for UK workers, accounting for income tax, National Insurance, pension contributions, and various deductions for the 2025-26 tax year.
 
