@@ -616,7 +616,12 @@ body {
 .preset-param-row .input-field {
   /* Must stay at 16px — anything smaller makes iOS Safari zoom the viewport on focus */
   font-size: 1rem;
-  padding: 0.4rem 0.5rem;
+  /* Left padding must clear .input-prefix, which sits at the left offset below */
+  padding: 0.4rem 0.5rem 0.4rem 1.5rem;
+}
+
+.preset-param-row .input-prefix {
+  left: 0.5rem;
 }
 
 .preset-apply-btn {
